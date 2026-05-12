@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CognoSpace Python IDE 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fira+Code:wght@400;500;600&family=Baloo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #f0f4ff;
+    --bg-panel: #ffffff;
+    --bg-card: #f7f9ff;
+    --bg-input: #eef2ff;
+    --accent-blue: #3b82f6;
+    --accent-purple: #8b5cf6;
+    --accent-pink: #ec4899;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-orange: #f97316;
+    --accent-cyan: #06b6d4;
+    --text-primary: #1e1b4b;
+    --text-secondary: #4338ca;
+    --text-muted: #6b7280;
+    --border: #dde3f8;
+    --border-bright: #a5b4fc;
+    --robot-glow: #3b82f6;
+    --tab-active: #3b82f6;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow-card: 0 4px 20px rgba(99,102,241,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+  }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── STARFIELD ─── */
+  #starfield {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 20% 50%, #dbeafe88 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, #ede9fe66 0%, transparent 50%);
+  }
+  .star {
+    position: absolute; border-radius: 50%;
+    background: #a5b4fc; animation: twinkle var(--d) ease-in-out infinite;
+    animation-delay: var(--delay);
+  }
+  @keyframes twinkle { 0%,100%{opacity:.2;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative; z-index: 10;
+    background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+    border-bottom: 2px solid var(--border);
+    padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 60px;
+    box-shadow: 0 2px 16px rgba(99,102,241,0.1);
+    flex-shrink: 0;
+  }
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 20px #4f9cf955, 0 0 40px #a78bfa33;
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+  @keyframes logoPulse { 0%,100%{box-shadow:0 0 16px #3b82f655,0 0 32px #8b5cf633} 50%{box-shadow:0 0 24px #3b82f6aa,0 0 48px #8b5cf666} }
+  .logo-text { font-family: 'Baloo 2', cursive; font-size: 1.4rem; font-weight: 800; }
+  .logo-text span:first-child { color: var(--accent-blue); }
+  .logo-text span:last-child { color: var(--accent-purple); }
+  .logo-sub { font-size: 0.68rem; color: var(--text-muted); font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; }
+
+  .mode-tabs {
+    display: flex; background: var(--bg-card); border-radius: 30px;
+    padding: 4px; border: 1.5px solid var(--border); gap: 4px;
+  }
+  .mode-tab {
+    padding: 7px 22px; border-radius: 25px; border: none; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.88rem;
+    transition: all .3s; color: var(--text-muted); background: transparent;
+  }
+  .mode-tab.active {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white; box-shadow: 0 4px 15px rgba(79,156,249,0.4);
+    transform: scale(1.02);
+  }
+  .mode-tab:hover:not(.active) { color: var(--text-primary); background: var(--bg-input); }
+
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .hbtn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 25px; border: 1.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem;
+    transition: all .25s;
+  }
+  .hbtn:hover { border-color: var(--accent-blue); color: var(--accent-blue); transform: translateY(-1px); }
+  .hbtn.run {
+    background: linear-gradient(135deg, var(--accent-green), #059669);
+    color: white; border-color: transparent;
+    box-shadow: 0 4px 15px rgba(52,211,153,0.35);
+  }
+  .hbtn.run:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(52,211,153,0.5); }
+
+  /* ─── MAIN CONTENT ─── */
+  .main {
+    flex: 1; display: flex; overflow: hidden; position: relative; z-index: 5; min-height: 0; height: 0;
+  }
+
+  /* ─── IDE MODE ─── */
+  #ide-mode { display: flex; width: 100%; height: 100%; min-height: 0; }
+
+  /* File sidebar */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-header {
+    padding: 14px 16px 10px;
+    font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .new-file-btn {
+    width: 24px; height: 24px; border-radius: 6px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border: none; cursor: pointer; color: white; font-size: 1rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .2s;
+  }
+  .new-file-btn:hover { transform: scale(1.15) rotate(90deg); }
+  .file-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .file-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    font-size: 0.84rem; font-weight: 600; color: var(--text-secondary);
+    transition: all .2s; margin-bottom: 2px; position: relative;
+  }
+  .file-item:hover { background: var(--bg-card); color: var(--text-primary); }
+  .file-item.active {
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    color: var(--accent-blue); border: 1px solid #a5b4fc;
+  }
+  .file-item .file-icon { font-size: 1rem; }
+  .file-close {
+    margin-left: auto; width: 18px; height: 18px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; opacity: 0; transition: opacity .2s;
+    background: rgba(255,100,100,0.2); color: #f87171;
+    border: none; cursor: pointer;
+  }
+  .file-item:hover .file-close { opacity: 1; }
+
+  /* Editor area */
+  .editor-area {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+    background: var(--bg-input);
+  }
+  .editor-tabs {
+    display: flex; align-items: center;
+    background: var(--bg-panel); border-bottom: 1.5px solid var(--border);
+    padding: 0 12px; gap: 4px; height: 40px; flex-shrink: 0;
+    overflow-x: auto;
+  }
+  .editor-tab {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 8px 8px 0 0; border: none;
+    background: transparent; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem;
+    color: var(--text-muted); transition: all .2s; white-space: nowrap;
+    border-bottom: 2px solid transparent;
+  }
+  .editor-tab.active { color: var(--accent-blue); border-bottom-color: var(--accent-blue); background: #dbeafe55; }
+  .editor-tab:hover:not(.active) { color: var(--text-secondary); background: #eff2ff; }
+
+  .code-wrapper {
+    flex: 1; display: flex; overflow: hidden; position: relative;
+  }
+  .line-numbers {
+    width: 52px; flex-shrink: 0; background: #e8eeff;
+    padding: 20px 8px; text-align: right;
+    font-family: 'Fira Code', monospace; font-size: 0.78rem;
+    color: var(--text-muted); line-height: 1.7;
+    user-select: none; overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+  .code-editor {
+    flex: 1; background: var(--bg-input);
+    padding: 20px 20px 20px 20px;
+    font-family: 'Fira Code', monospace; font-size: 0.88rem;
+    color: #1e1b4b; line-height: 1.7;
+    border: none; outline: none; resize: none;
+    overflow-y: auto; tab-size: 4;
+    caret-color: var(--accent-blue);
+  }
+  .code-editor::placeholder { color: #9ca3af; }
+  .code-editor::-webkit-scrollbar { width: 6px; }
+  .code-editor::-webkit-scrollbar-track { background: transparent; }
+  .code-editor::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* Output area */
+  .output-panel {
+    width: 380px; flex-shrink: 0;
+    background: var(--bg-panel);
+    border-left: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .output-header {
+    padding: 10px 16px;
+    border-bottom: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .output-title {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 800; font-size: 0.85rem; color: var(--text-secondary);
+  }
+  .output-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green); animation: blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  .clear-btn {
+    font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--text-muted); cursor: pointer; font-family: 'Nunito', sans-serif;
+    font-weight: 600; transition: all .2s;
+  }
+  .clear-btn:hover { border-color: var(--accent-pink); color: var(--accent-pink); }
+  .output-body {
+    flex: 1; overflow-y: auto; padding: 20px;
+    font-family: 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.7;
+  }
+  .output-line { margin-bottom: 4px; animation: fadeIn .3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+  .output-line.success { color: #059669; }
+  .output-line.error { color: #dc2626; }
+  .output-line.info { color: var(--accent-cyan); }
+  .output-line.normal { color: var(--text-primary); }
+  .output-line.system { color: var(--accent-yellow); font-style: italic; }
+
+  .input-area {
+    border-top: 1.5px solid var(--border);
+    padding: 10px 16px;
+    display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+  }
+  .stdin-input {
+    flex: 1; background: var(--bg-input); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 8px 12px;
+    color: var(--text-primary); font-family: 'Fira Code', monospace; font-size: 0.82rem;
+    outline: none; transition: border-color .2s;
+  }
+  .stdin-input:focus { border-color: var(--accent-blue); }
+  .stdin-btn {
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    border: none; color: white; font-weight: 700; font-size: 0.8rem;
+    cursor: pointer; font-family: 'Nunito', sans-serif;
+    transition: transform .2s;
+  }
+  .stdin-btn:hover { transform: scale(1.05); }
+
+  /* ─── FLOATING ROBOT ─── */
+  #robot-assistant {
+    position: fixed; bottom: 80px; right: 20px; z-index: 100;
+    cursor: pointer;
+  }
+  .robot-body {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    border-radius: 50%; border: 3px solid var(--accent-blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; position: relative;
+    box-shadow: 0 0 20px rgba(59,130,246,0.4), 0 0 40px rgba(59,130,246,0.15);
+    animation: robotFloat 3s ease-in-out infinite;
+    transition: transform .3s;
+  }
+  .robot-body:hover { transform: scale(1.1); }
+  @keyframes robotFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .robot-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--accent-pink);
+    border: 2px solid var(--bg-deep);
+    display: none; align-items: center; justify-content: center;
+    font-size: 0.6rem; color: white; font-weight: 800;
+    animation: badgePulse 1s ease-in-out infinite;
+  }
+  .robot-badge.show { display: flex; }
+  @keyframes badgePulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+  .robot-label {
+    position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 0.65rem; font-weight: 800; color: var(--accent-blue);
+    white-space: nowrap; letter-spacing: 0.5px;
+  }
+
+  /* Robot chat bubble */
+  #robot-bubble {
+    position: fixed; bottom: 160px; right: 20px; z-index: 101;
+    width: 280px; background: #fff;
+    border: 2px solid var(--accent-blue); border-radius: 20px 20px 4px 20px;
+    padding: 16px; box-shadow: 0 8px 32px rgba(59,130,246,0.2);
+    display: none; animation: bubbleIn .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes bubbleIn { from{opacity:0;transform:scale(.8) translateY(10px)} to{opacity:1;transform:none} }
+  .bubble-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+  }
+  .bubble-avatar { font-size: 1.4rem; }
+  .bubble-name { font-weight: 800; font-size: 0.85rem; color: var(--accent-blue); }
+  .bubble-close {
+    margin-left: auto; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--border); border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 0.7rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+  }
+  .bubble-close:hover { background: #f8717140; color: #f87171; }
+  .bubble-text { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+  .bubble-hint {
+    margin-top: 10px; padding: 8px 12px; border-radius: 8px;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 1px solid #6ee7b7;
+    font-size: 0.78rem; color: #059669; font-family: 'Fira Code', monospace;
+    display: none;
+  }
+
+  /* ─── LEARNING MODE ─── */
+  #learn-mode {
+    display: none; width: 100%; height: 100%;
+    overflow: hidden; min-height: 0;
+  }
+
+  .learn-layout {
+    display: flex; height: 100%; width: 100%; min-height: 0; overflow: hidden;
+  }
+
+  /* Modules sidebar */
+  .modules-panel {
+    width: 280px; flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden; min-height: 0; height: 100%;
+  }
+  .modules-search {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .modules-title {
+    padding: 12px 16px 8px;
+    font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+    letter-spacing: 1.5px; text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .modules-list { flex: 1; overflow-y: auto; padding: 8px; min-height: 0; }
+  .search-input {
+    width: 100%; background: var(--bg-input); border: 1.5px solid var(--border);
+    border-radius: 25px; padding: 8px 16px;
+    color: var(--text-primary); font-family: 'Nunito', sans-serif; font-size: 0.85rem;
+    outline: none; transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--accent-blue); }
+  .search-input::placeholder { color: var(--text-muted); }
+  .module-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    transition: all .2s; margin-bottom: 3px;
+    border: 1px solid transparent;
+  }
+  .module-item:hover { background: var(--bg-card); border-color: var(--border); }
+  .module-item.active {
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    border: 1px solid #a5b4fc;
+  }
+  .module-number {
+    min-width: 28px; height: 28px; border-radius: 8px;
+    background: var(--bg-card); border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem; font-weight: 800; color: var(--text-muted);
+    transition: all .2s; flex-shrink: 0;
+  }
+  .module-item.active .module-number {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white; border-color: transparent;
+  }
+  .module-item.completed .module-number {
+    background: linear-gradient(135deg, var(--accent-green), #059669);
+    color: white; border-color: transparent;
+  }
+  .module-label { font-size: 0.83rem; font-weight: 700; color: var(--text-secondary); line-height: 1.3; }
+  .module-item.active .module-label { color: var(--accent-blue); font-weight: 800; }
+  .module-emoji { font-size: 1rem; flex-shrink: 0; }
+
+  /* Content area */
+  .learn-content {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; height: 100%;
+  }
+  .learn-topbar {
+    padding: 14px 24px;
+    border-bottom: 1.5px solid var(--border);
+    background: var(--bg-panel);
+    display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+  }
+  .progress-bar {
+    flex: 1; height: 8px; background: var(--bg-card); border-radius: 4px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+    transition: width .5s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 0 10px rgba(79,156,249,0.5);
+  }
+  .progress-text { font-size: 0.8rem; font-weight: 800; color: var(--accent-blue); white-space: nowrap; }
+  .learn-nav-btns { display: flex; gap: 8px; }
+  .nav-btn {
+    padding: 7px 16px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.82rem;
+    transition: all .2s;
+  }
+  .nav-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+  .nav-btn.primary {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white; border-color: transparent;
+  }
+  .nav-btn.primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(79,156,249,0.4); }
+
+  .learn-body {
+    flex: 1; display: flex; overflow: hidden; min-height: 0; height: 100%;
+  }
+  .lesson-content {
+    flex: 1; overflow-y: auto; padding: 32px 40px; min-height: 0; height: 100%;
+  }
+  .lesson-content::-webkit-scrollbar { width: 6px; }
+  .lesson-content::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  .lesson-header { margin-bottom: 28px; }
+  .lesson-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    border: 1px solid #a5b4fc;
+    border-radius: 20px; padding: 4px 14px; margin-bottom: 14px;
+    font-size: 0.75rem; font-weight: 800; color: var(--accent-blue); letter-spacing: 1px;
+  }
+  .lesson-title {
+    font-family: 'Baloo 2', cursive; font-size: 2.2rem; font-weight: 800;
+    color: var(--text-primary); line-height: 1.2; margin-bottom: 8px;
+  }
+  .lesson-desc { font-size: 1rem; color: var(--text-muted); line-height: 1.6; }
+
+  .concept-card {
+    background: var(--bg-card); border: 1.5px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 20px;
+    transition: border-color .2s, box-shadow .2s;
+    box-shadow: var(--shadow-card);
+  }
+  .concept-card:hover { border-color: var(--border-bright); box-shadow: 0 6px 24px rgba(99,102,241,0.15); }
+  .concept-card.highlight { border-color: var(--accent-blue); background: #eff6ff; }
+  .concept-card.green { border-color: var(--accent-green); background: #f0fdf4; }
+  .concept-card.purple { border-color: var(--accent-purple); background: #faf5ff; }
+  .concept-card.yellow { border-color: var(--accent-yellow); background: #fffbeb; }
+  .card-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1rem; font-weight: 800; color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .card-icon { font-size: 1.3rem; }
+  .card-body { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; }
+
+  .code-block {
+    background: #1e1b4b; border: 1.5px solid #3730a3;
+    border-radius: var(--radius-sm); padding: 16px 20px; margin: 12px 0;
+    font-family: 'Fira Code', monospace; font-size: 0.85rem;
+    color: #e0e7ff; line-height: 1.7; position: relative;
+    overflow-x: auto;
+  }
+  .code-block .kw { color: #c4b5fd; font-weight: 600; }
+  .code-block .str { color: #86efac; }
+  .code-block .num { color: #fdba74; }
+  .code-block .comment { color: #94a3b8; font-style: italic; }
+  .code-block .fn { color: #93c5fd; }
+  .code-block .var { color: #67e8f9; }
+  .copy-btn-code { display: none !important; }
+  .code-block {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+  }
+  .try-editor {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .try-it-section {
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    border: 2px solid #6ee7b7;
+    border-radius: var(--radius); padding: 20px; margin-top: 20px;
+  }
+  .try-it-title {
+    font-size: 0.9rem; font-weight: 800; color: #059669;
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .try-editor {
+    background: #fff; border: 1.5px solid #a7f3d0;
+    border-radius: var(--radius-sm); padding: 14px;
+    font-family: 'Fira Code', monospace; font-size: 0.85rem;
+    color: #1e1b4b; width: 100%; min-height: 100px;
+    outline: none; resize: vertical; line-height: 1.7;
+  }
+  .try-editor:focus { border-color: var(--accent-green); }
+  .try-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .try-run {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 18px; border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent-green), #059669);
+    border: none; color: white; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 0.85rem;
+    transition: transform .2s; box-shadow: 0 4px 15px rgba(52,211,153,0.3);
+  }
+  .try-run:hover { transform: scale(1.05); }
+  .try-output {
+    margin-top: 10px; background: #1e1b4b; border: 1px solid #3730a3;
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    font-family: 'Fira Code', monospace; font-size: 0.83rem; color: #86efac;
+    min-height: 40px; line-height: 1.6; white-space: pre-wrap; display: none;
+  }
+
+  .quiz-card {
+    background: linear-gradient(135deg, #faf5ff, #f5f3ff);
+    border: 2px solid var(--accent-purple);
+    border-radius: var(--radius); padding: 22px; margin-top: 20px;
+  }
+  .quiz-q { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt {
+    padding: 10px 16px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: #fff;
+    color: var(--text-muted); cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 600; font-size: 0.88rem;
+    transition: all .2s; text-align: left;
+  }
+  .quiz-opt:hover { border-color: var(--accent-purple); color: var(--text-primary); background: #faf5ff; }
+  .quiz-opt.correct { border-color: var(--accent-green); background: #ecfdf5; color: #059669; }
+  .quiz-opt.wrong { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+  .quiz-result { margin-top: 12px; font-size: 0.88rem; font-weight: 700; display: none; }
+  .quiz-result.correct { color: #059669; }
+  .quiz-result.wrong { color: #dc2626; }
+
+  /* Robot companion panel */
+  .robot-panel {
+    width: 260px; flex-shrink: 0;
+    background: var(--bg-panel);
+    border-left: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow-y: auto; padding: 20px; min-height: 0; height: 100%;
+  }
+  .robot-companion {
+    text-align: center; margin-bottom: 20px;
+  }
+  .robot-big {
+    font-size: 4rem;
+    animation: robotFloat 3s ease-in-out infinite;
+    display: block; margin-bottom: 8px;
+  }
+  .companion-name {
+    font-family: 'Baloo 2', cursive; font-weight: 800;
+    font-size: 1rem; color: var(--accent-blue);
+  }
+  .companion-sub { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
+  .companion-speech {
+    background: #eff6ff; border: 1.5px solid var(--accent-blue);
+    border-radius: 12px 12px 12px 4px; padding: 14px;
+    font-size: 0.83rem; color: var(--text-secondary); line-height: 1.5;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .companion-speech::before {
+    content: '"'; font-size: 2rem; color: var(--accent-blue);
+    position: absolute; top: -8px; left: 10px; font-family: 'Baloo 2', cursive;
+  }
+  .fun-fact {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1px solid #fcd34d; border-radius: var(--radius-sm);
+    padding: 12px; margin-bottom: 12px;
+  }
+  .fun-fact-title { font-size: 0.72rem; font-weight: 800; color: #d97706; letter-spacing: 1px; margin-bottom: 6px; }
+  .fun-fact-text { font-size: 0.8rem; color: #78350f; line-height: 1.5; }
+  .xp-section { margin-top: 8px; }
+  .xp-label { font-size: 0.72rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 6px; }
+  .xp-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+  .xp-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent-yellow), var(--accent-orange)); transition: width .5s; }
+  .xp-text { font-size: 0.75rem; color: #d97706; font-weight: 700; }
+  .achievements { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .badge-chip {
+    padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800;
+    background: #f9fafb; border: 1.5px solid var(--border);
+    color: var(--text-muted); transition: all .3s;
+  }
+  .badge-chip.earned { border-color: var(--accent-yellow); color: #d97706; background: #fffbeb; }
+
+  /* Welcome Banner */
+  .welcome-banner {
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+    border: 1.5px solid var(--border-bright);
+    border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .welcome-banner-icon { font-size: 2.5rem; flex-shrink: 0; }
+  .welcome-banner-text h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px; }
+  .welcome-banner-text p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; }
+  .stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
+  .stat-chip {
+    flex: 1; background: var(--bg-panel); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 16px; text-align: center;
+    box-shadow: var(--shadow-card);
+  }
+  .stat-chip .stat-num { font-size: 1.5rem; font-weight: 900; color: var(--accent-blue); font-family: 'Baloo 2', cursive; }
+  .stat-chip .stat-label { font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    position: relative; z-index: 10;
+    background: linear-gradient(135deg, #f5f3ff, #eff6ff);
+    border-top: 1.5px solid var(--border);
+    padding: 10px 24px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 0.78rem; color: var(--text-muted); font-weight: 600;
+    flex-shrink: 0;
+  }
+  .footer-love {
+    font-size: 1.1rem; display: inline-block;
+    animation: heartbeat 1.2s ease-in-out infinite;
+  }
+  @keyframes heartbeat {
+    0%,100%{transform:scale(1)} 14%{transform:scale(1.3)} 28%{transform:scale(1)} 42%{transform:scale(1.2)} 56%{transform:scale(1)}
+  }
+  .footer-brand { color: var(--accent-blue); font-weight: 800; }
+  .footer-dot { color: var(--border-bright); }
+  .footer-star { color: var(--accent-yellow); animation: spin 4s linear infinite; display: inline-block; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+  /* ─── MODAL ─── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border: 2px solid var(--border-bright);
+    border-radius: var(--radius); padding: 28px; width: 420px;
+    box-shadow: var(--shadow-card); animation: modalIn .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(.9) translateY(20px)} to{opacity:1;transform:none} }
+  .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 16px; color: var(--text-primary); }
+  .modal-input {
+    width: 100%; background: var(--bg-input); border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px;
+    color: var(--text-primary); font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    outline: none; margin-bottom: 16px; transition: border-color .2s;
+  }
+  .modal-input:focus { border-color: var(--accent-blue); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-cancel {
+    padding: 8px 18px; border-radius: 20px; border: 1.5px solid var(--border);
+    background: transparent; color: var(--text-secondary); cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-weight: 700;
+  }
+  .modal-confirm {
+    padding: 8px 18px; border-radius: 20px; border: none;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700;
+  }
+
+  /* Toast */
+  #toast {
+    position: fixed; top: 72px; right: 20px; z-index: 300;
+    background: #1e1b4b; border: 1.5px solid var(--border-bright);
+    border-radius: var(--radius-sm); padding: 12px 18px;
+    font-size: 0.85rem; font-weight: 700; color: #e0e7ff;
+    box-shadow: var(--shadow-card); display: none;
+    animation: toastIn .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes toastIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+
+  /* Scrollbars */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 3px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1024px) {
+    .robot-panel { width: 220px; padding: 14px; }
+    .modules-panel { width: 240px; }
+    .output-panel { width: 300px; }
+  }
+
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+    header { padding: 0 12px; height: auto; min-height: 56px; flex-wrap: wrap; gap: 8px; padding: 8px 12px; }
+    .logo-sub { display: none; }
+    .mode-tabs { order: 3; width: 100%; justify-content: center; }
+    .mode-tab { padding: 6px 16px; font-size: 0.82rem; }
+    .header-actions { gap: 6px; }
+    .hbtn span:not(.run-label) { display: none; }
+    .hbtn { padding: 6px 10px; font-size: 0.78rem; }
+
+    .main { overflow: visible; }
+    #ide-mode { flex-direction: column; height: auto; min-height: 100vh; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; height: auto; border-right: none; border-bottom: 1.5px solid var(--border); padding: 6px; }
+    .sidebar-header { display: none; }
+    .file-list { display: flex; flex-direction: row; gap: 4px; overflow-x: auto; padding: 0; }
+    .file-item { white-space: nowrap; border-radius: 20px; padding: 6px 12px; }
+    .editor-area { height: 50vh; min-height: 300px; }
+    .output-panel { width: 100%; border-left: none; border-top: 1.5px solid var(--border); height: 40vh; min-height: 200px; }
+
+    #learn-mode { height: auto; overflow-y: auto; }
+    .learn-layout { flex-direction: column; height: auto; min-height: 100vh; }
+    .modules-panel { width: 100%; border-right: none; border-bottom: 1.5px solid var(--border); max-height: 200px; overflow-y: auto; }
+    .modules-list { max-height: 140px; }
+    .learn-content { height: auto; }
+    .learn-body { flex-direction: column; }
+    .robot-panel { width: 100%; border-left: none; border-top: 1.5px solid var(--border); }
+    .lesson-content { padding: 20px; }
+    .lesson-title { font-size: 1.6rem; }
+    .learn-topbar { flex-wrap: wrap; gap: 8px; padding: 10px 16px; }
+    .learn-nav-btns { order: 3; width: 100%; justify-content: center; display: flex; }
+
+    #robot-assistant { bottom: 16px; right: 16px; }
+    #robot-bubble { right: 12px; width: 260px; bottom: 140px; }
+
+    footer { flex-wrap: wrap; justify-content: center; padding: 8px 12px; gap: 4px; font-size: 0.72rem; }
+  }
+
+  @media (max-width: 480px) {
+    .logo-text { font-size: 1.1rem; }
+    .mode-tab { padding: 5px 12px; font-size: 0.78rem; }
+    .hbtn { padding: 5px 8px; font-size: 0.75rem; }
+    .lesson-title { font-size: 1.3rem; }
+    .lesson-content { padding: 14px; }
+    .modal { width: calc(100vw - 32px); padding: 20px; }
+    .code-block { font-size: 0.78rem; padding: 12px; }
+    .try-editor { font-size: 0.78rem; }
+    .nav-btn { padding: 5px 12px; font-size: 0.76rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div id="starfield"></div>
+
+<!-- Toast -->
+<div id="toast">✅ Copied to clipboard!</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">🚀</div>
+    <div>
+      <div class="logo-text"><span>Cogno</span><span>Space</span></div>
+      <div class="logo-sub">Python IDE for Kids</div>
+    </div>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="switchMode('ide')" id="tab-ide">⌨️ IDE Mode</button>
+    <button class="mode-tab" onclick="switchMode('learn')" id="tab-learn">📚 Learning Mode</button>
+  </div>
+
+  <div class="header-actions">
+    <button class="hbtn" onclick="openFile()" title="Open File">📂 Open</button>
+    <input type="file" id="fileInput" accept=".py,.txt" style="display:none" onchange="loadFile(event)">
+    <button class="hbtn" onclick="saveFile()" title="Save File">💾 Save</button>
+    <button class="hbtn" onclick="downloadFile()" title="Download .py">⬇️ Download</button>
+    <button class="hbtn" onclick="showNewFileModal()" title="New File">✨ New</button>
+    <button class="hbtn run" onclick="runCode()" id="run-btn">▶ Run Code</button>
+  </div>
+</header>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- ═══ IDE MODE ═══ -->
+  <div id="ide-mode">
+
+    <!-- File sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        📁 Files
+        <button class="new-file-btn" onclick="showNewFileModal()" title="New file">+</button>
+      </div>
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-area">
+      <div class="editor-tabs" id="editor-tabs"></div>
+      <div class="code-wrapper">
+        <div class="line-numbers" id="line-numbers">1</div>
+        <textarea class="code-editor" id="code-editor"
+          placeholder="# 🚀 Welcome to CognoSpace Python IDE!
+# Start coding your Python magic here...
+# 
+# Try typing: print('Hello, World! 🌍')
+"
+          spellcheck="false"
+          oninput="onEditorInput()"
+          onkeydown="handleTab(event)"
+          onscroll="syncScroll()"
+          onkeyup="updateLineNumbers()"></textarea>
+      </div>
+    </div>
+
+    <!-- Output panel -->
+    <div class="output-panel">
+      <div class="output-header">
+        <div class="output-title">
+          <div class="output-dot"></div>
+          🖥️ Output Console
+        </div>
+        <button class="clear-btn" onclick="clearOutput()">Clear</button>
+      </div>
+      <div class="output-body" id="output-body">
+        <div class="output-line system">// CognoSpace Python Console v2.0</div>
+        <div class="output-line system">// Ready to run your code! Hit ▶ Run Code 🚀</div>
+      </div>
+      <div class="input-area">
+        <input class="stdin-input" id="stdin-input" placeholder="stdin input..." />
+        <button class="stdin-btn" onclick="sendInput()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ LEARNING MODE ═══ -->
+  <div id="learn-mode">
+    <div class="learn-layout">
+
+      <!-- Modules sidebar -->
+      <div class="modules-panel">
+        <div class="modules-search">
+          <input class="search-input" placeholder="🔍 Search modules..." oninput="filterModules(this.value)" />
+        </div>
+        <div class="modules-title">📚 All Modules <span style="background:var(--accent-blue);color:white;border-radius:10px;padding:2px 8px;font-size:0.65rem;margin-left:6px;">50</span></div>
+        <div class="modules-list" id="modules-list"></div>
+      </div>
+
+      <!-- Lesson content -->
+      <div class="learn-content">
+        <div class="learn-topbar">
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:2%"></div>
+          </div>
+          <div class="progress-text" id="progress-text">1 / 50</div>
+          <div class="learn-nav-btns">
+            <button class="nav-btn" onclick="prevLesson()">← Prev</button>
+            <button class="nav-btn primary" onclick="nextLesson()">Next →</button>
+          </div>
+        </div>
+        <div class="learn-body">
+          <div class="lesson-content" id="lesson-content"></div>
+        </div>
+      </div>
+
+      <!-- Robot companion panel -->
+      <div class="robot-panel">
+        <div class="robot-companion">
+          <span class="robot-big">🤖</span>
+          <div class="companion-name">CognoBot</div>
+          <div class="companion-sub">Your Python Buddy!</div>
+        </div>
+        <div class="companion-speech" id="companion-speech">
+          Hi! I'm CognoBot! I'll help you learn Python step by step. Let's go on an adventure! 🚀
+        </div>
+        <div class="fun-fact">
+          <div class="fun-fact-title">⭐ FUN FACT</div>
+          <div class="fun-fact-text" id="fun-fact-text">Python was named after Monty Python's Flying Circus, a British comedy show!</div>
+        </div>
+        <div class="xp-section">
+          <div class="xp-label">🏆 YOUR XP</div>
+          <div class="xp-bar"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+          <div class="xp-text" id="xp-text">0 / 500 XP</div>
+        </div>
+        <div class="achievements">
+          <div class="badge-chip" id="badge-first">🎯 First Step</div>
+          <div class="badge-chip" id="badge-coder">👨‍💻 Coder</div>
+          <div class="badge-chip" id="badge-quiz">🧠 Quiz Pro</div>
+          <div class="badge-chip" id="badge-half">⭐ Halfway</div>
+          <div class="badge-chip" id="badge-master">🏅 Master</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer>
+  <span class="footer-star">✦</span>
+  <span>Designed & Developed with</span>
+  <span class="footer-love">❤️</span>
+  <span>by</span>
+  <span class="footer-brand">CognoSpace</span>
+  <span class="footer-dot">•</span>
+  <span>Making Python Fun for Kids</span>
+  <span class="footer-star">✦</span>
+</footer>
+
+<!-- Floating Robot (IDE mode) -->
+<div id="robot-assistant" onclick="toggleRobotBubble()">
+  <div class="robot-body">
+    🤖
+    <div class="robot-badge" id="robot-badge">!</div>
+  </div>
+  <div class="robot-label">CognoBot</div>
+</div>
+
+<!-- Robot Bubble -->
+<div id="robot-bubble">
+  <div class="bubble-header">
+    <span class="bubble-avatar">🤖</span>
+    <span class="bubble-name">CognoBot says...</span>
+    <button class="bubble-close" onclick="closeRobotBubble()">✕</button>
+  </div>
+  <div class="bubble-text" id="bubble-text">Hi there! I'm watching your code and ready to help! Start typing to see my tips! 🚀</div>
+  <div class="bubble-hint" id="bubble-hint"></div>
+</div>
+
+<!-- New File Modal -->
+<div class="modal-overlay" id="new-file-modal">
+  <div class="modal">
+    <div class="modal-title">✨ Create New File</div>
+    <input class="modal-input" id="new-file-name" placeholder="e.g. my_program.py" value="new_file.py" />
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" onclick="createNewFile()">Create File 🚀</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── STARFIELD ───
+(function() {
+  const sf = document.getElementById('starfield');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      --d:${2 + Math.random()*4}s;
+      --delay:${Math.random()*4}s;
+    `;
+    sf.appendChild(s);
+  }
+})();
+
+// ─── FILES STATE ───
+let files = [
+  { name: 'hello_world.py', content: `# 🌍 Hello World - My First Python Program!\nprint("Hello, World! 🌍")\nprint("Welcome to CognoSpace!")\nprint("Let's code some awesome stuff! 🚀")` },
+  { name: 'calculator.py', content: `# 🔢 Simple Calculator\nnum1 = 10\nnum2 = 5\n\nprint("Addition:", num1 + num2)\nprint("Subtraction:", num1 - num2)\nprint("Multiplication:", num1 * num2)\nprint("Division:", num1 / num2)\nprint("So cool! 🎉")` },
+  { name: 'my_program.py', content: `# ✏️ Write your code here!\n\nname = "CognoSpace Explorer"\nage = 10\n\nprint(f"Hi! My name is {name}")\nprint(f"I am {age} years old")\nprint("I love Python! 🐍")` },
+];
+let activeFile = 0;
+let currentXP = 0;
+let completedModules = new Set();
+let quizAnswered = new Set();
+let currentLesson = 0;
+
+// ─── RENDER FILES ───
+function renderFiles() {
+  const list = document.getElementById('file-list');
+  const tabs = document.getElementById('editor-tabs');
+  list.innerHTML = '';
+  tabs.innerHTML = '';
+  files.forEach((f, i) => {
+    // Sidebar
+    const item = document.createElement('div');
+    item.className = 'file-item' + (i === activeFile ? ' active' : '');
+    item.innerHTML = `<span class="file-icon">🐍</span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.name}</span><button class="file-close" onclick="event.stopPropagation();closeFile(${i})">✕</button>`;
+    item.onclick = () => switchFile(i);
+    list.appendChild(item);
+    // Tab
+    const tab = document.createElement('button');
+    tab.className = 'editor-tab' + (i === activeFile ? ' active' : '');
+    tab.innerHTML = `🐍 ${f.name}`;
+    tab.onclick = () => switchFile(i);
+    tabs.appendChild(tab);
+  });
+  // Load editor content
+  const ed = document.getElementById('code-editor');
+  ed.value = files[activeFile].content;
+  updateLineNumbers();
+}
+
+function switchFile(i) {
+  files[activeFile].content = document.getElementById('code-editor').value;
+  activeFile = i;
+  renderFiles();
+}
+
+function closeFile(i) {
+  if (files.length === 1) { showToast('⚠️ Keep at least one file!'); return; }
+  files.splice(i, 1);
+  if (activeFile >= files.length) activeFile = files.length - 1;
+  renderFiles();
+}
+
+// ─── NEW FILE ───
+function showNewFileModal() { document.getElementById('new-file-modal').classList.add('show'); document.getElementById('new-file-name').focus(); }
+function closeModal() { document.getElementById('new-file-modal').classList.remove('show'); }
+function createNewFile() {
+  const name = document.getElementById('new-file-name').value.trim() || 'new_file.py';
+  const finalName = name.endsWith('.py') ? name : name + '.py';
+  files.push({ name: finalName, content: `# 🚀 ${finalName}\n# Write your awesome Python code here!\n\n` });
+  activeFile = files.length - 1;
+  renderFiles();
+  closeModal();
+  showToast(`✨ Created ${finalName}!`);
+}
+
+// ─── FILE OPERATIONS ───
+function openFile() { document.getElementById('fileInput').click(); }
+function loadFile(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    files.push({ name: f.name, content: ev.target.result });
+    activeFile = files.length - 1;
+    renderFiles();
+    showToast(`📂 Opened ${f.name}!`);
+  };
+  r.readAsText(f);
+}
+function saveFile() {
+  files[activeFile].content = document.getElementById('code-editor').value;
+  showToast('💾 File saved!');
+}
+function downloadFile() {
+  files[activeFile].content = document.getElementById('code-editor').value;
+  const blob = new Blob([files[activeFile].content], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = files[activeFile].name;
+  a.click();
+  showToast(`⬇️ Downloaded ${files[activeFile].name}!`);
+}
+
+// ─── EDITOR UTILITIES ───
+function updateLineNumbers() {
+  const ed = document.getElementById('code-editor');
+  const lines = ed.value.split('\n').length;
+  const ln = document.getElementById('line-numbers');
+  ln.innerHTML = Array.from({length: lines}, (_, i) => `<div>${i+1}</div>`).join('');
+}
+function handleTab(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ta = e.target;
+    const s = ta.selectionStart, en = ta.selectionEnd;
+    ta.value = ta.value.substring(0,s) + '    ' + ta.value.substring(en);
+    ta.selectionStart = ta.selectionEnd = s + 4;
+    onEditorInput();
+  }
+}
+function syncScroll() {
+  const ed = document.getElementById('code-editor');
+  document.getElementById('line-numbers').scrollTop = ed.scrollTop;
+}
+function onEditorInput() {
+  files[activeFile].content = document.getElementById('code-editor').value;
+  updateLineNumbers();
+  analyzeCode(document.getElementById('code-editor').value);
+}
+
+// ─── CODE ANALYSIS (Robot hints) ───
+const robotMessages = [
+  { test: c => c.includes('print') && !c.includes('print('), msg: "👀 Did you forget parentheses after print? Try: print('Hello!')", hint: "print('Your message here')" },
+  { test: c => /def\s+\w+\s*[^(]/.test(c), msg: "🔧 Function definitions need parentheses! Like: def my_function():", hint: "def my_function():\n    pass" },
+  { test: c => c.includes('=') && !c.includes('==') && (c.includes('if ') || c.includes('while ')), msg: "🤔 In if/while conditions, use == to compare, not =!", hint: "if x == 5:  # comparison\nx = 5      # assignment" },
+  { test: c => /^\s+print/m.test(c) && !/def|if|for|while|else|elif|try|with/.test(c), msg: "📐 Looks like you have unexpected indentation! Python is picky about spaces.", hint: "# Remove extra spaces at the start of lines" },
+  { test: c => c.length > 10 && !c.includes('#'), msg: "💡 Great coding! Don't forget to add comments with # to explain your code!", hint: "# This is a comment - it explains what your code does!" },
+];
+let lastRobotMsg = '';
+function analyzeCode(code) {
+  if (!code.trim()) return;
+  for (const rule of robotMessages) {
+    if (rule.test(code)) {
+      if (rule.msg !== lastRobotMsg) {
+        lastRobotMsg = rule.msg;
+        showRobotHint(rule.msg, rule.hint);
+      }
+      return;
+    }
+  }
+  document.getElementById('robot-badge').classList.remove('show');
+}
+function showRobotHint(msg, hint) {
+  document.getElementById('bubble-text').textContent = msg;
+  const hintEl = document.getElementById('bubble-hint');
+  if (hint) { hintEl.textContent = hint; hintEl.style.display = 'block'; }
+  document.getElementById('robot-badge').classList.add('show');
+}
+function toggleRobotBubble() {
+  const b = document.getElementById('robot-bubble');
+  b.style.display = b.style.display === 'block' ? 'none' : 'block';
+}
+function closeRobotBubble() { document.getElementById('robot-bubble').style.display = 'none'; }
+
+// ─── PYTHON INTERPRETER (Simulated) ───
+const pyBuiltins = {
+  print: (...args) => {
+    const line = args.map(a => {
+      if (typeof a === 'string') return a;
+      if (Array.isArray(a)) return '[' + a.map(x => JSON.stringify(x)).join(', ') + ']';
+      if (typeof a === 'object' && a !== null) return JSON.stringify(a);
+      return String(a);
+    }).join(' ');
+    addOutput(line, 'normal');
+  },
+  len: a => Array.isArray(a) ? a.length : (typeof a === 'string' ? a.length : 0),
+  range: function() {
+    let [s, e, step] = [0, 0, 1];
+    if (arguments.length === 1) { s = 0; e = arguments[0]; }
+    else if (arguments.length === 2) { s = arguments[0]; e = arguments[1]; }
+    else { s = arguments[0]; e = arguments[1]; step = arguments[2]; }
+    const r = []; for (let i = s; i < e; i += step) r.push(i); return r;
+  },
+  int: a => parseInt(a),
+  float: a => parseFloat(a),
+  str: a => String(a),
+  type: a => typeof a === 'number' ? (Number.isInteger(a) ? '<class \'int\'>' : '<class \'float\'>') : `<class '${typeof a}'>`,
+  abs: Math.abs,
+  max: (...a) => Math.max(...(Array.isArray(a[0]) ? a[0] : a)),
+  min: (...a) => Math.min(...(Array.isArray(a[0]) ? a[0] : a)),
+  sum: a => a.reduce((x,y) => x+y, 0),
+  sorted: a => [...a].sort((x,y) => x-y),
+  reversed: a => [...a].reverse(),
+  list: a => Array.isArray(a) ? a : Array.from(a||[]),
+  tuple: a => Array.isArray(a) ? a : [],
+  dict: () => ({}),
+  input: prompt => { const r = document.getElementById('stdin-input').value; addOutput(`${prompt||''}${r}`, 'info'); return r; },
+  enumerate: (a, s=0) => a.map((v,i)=>[i+s, v]),
+};
+
+function runCode() {
+  const code = document.getElementById('code-editor').value;
+  const btn = document.getElementById('run-btn');
+  btn.textContent = '⏳ Running...';
+  btn.disabled = true;
+  clearOutput();
+  addOutput('▶ Running ' + files[activeFile].name + '...', 'system');
+  setTimeout(() => {
+    try {
+      executePython(code);
+      addOutput('✅ Program finished successfully!', 'success');
+    } catch(e) {
+      addOutput('❌ Error: ' + e.message, 'error');
+      showRobotHint('🐛 Oops! There\'s an error in your code. Look at the red message in the console!', e.message);
+      document.getElementById('robot-bubble').style.display = 'block';
+    }
+    btn.textContent = '▶ Run Code';
+    btn.disabled = false;
+  }, 200);
+}
+
+function executePython(code) {
+  // Transpile basic Python to JS
+  let js = code
+    .replace(/^#.*$/gm, '') // remove comments
+    .replace(/print\s*\(/g, '__py.print(')
+    .replace(/\blen\s*\(/g, '__py.len(')
+    .replace(/\brange\s*\(/g, '__py.range(')
+    .replace(/\bint\s*\(/g, '__py.int(')
+    .replace(/\bfloat\s*\(/g, '__py.float(')
+    .replace(/\bstr\s*\(/g, '__py.str(')
+    .replace(/\btype\s*\(/g, '__py.type(')
+    .replace(/\babs\s*\(/g, '__py.abs(')
+    .replace(/\bmax\s*\(/g, '__py.max(')
+    .replace(/\bmin\s*\(/g, '__py.min(')
+    .replace(/\bsum\s*\(/g, '__py.sum(')
+    .replace(/\bsorted\s*\(/g, '__py.sorted(')
+    .replace(/\breversed\s*\(/g, '__py.reversed(')
+    .replace(/\blist\s*\(/g, '__py.list(')
+    .replace(/\btuple\s*\(/g, '__py.tuple(')
+    .replace(/\bdict\s*\(/g, '__py.dict(')
+    .replace(/\binput\s*\(/g, '__py.input(')
+    .replace(/\bzip\s*\(/g, '__py.zip(')
+    .replace(/\benumerate\s*\(/g, '__py.enumerate(')
+    .replace(/\bmap\s*\(/g, '__py.map(')
+    .replace(/\bfilter\s*\(/g, '__py.filter(')
+    .replace(/\bTrue\b/g, 'true')
+    .replace(/\bFalse\b/g, 'false')
+    .replace(/\bNone\b/g, 'null')
+    .replace(/\band\b/g, '&&')
+    .replace(/\bor\b/g, '||')
+    .replace(/\bnot\b/g, '!')
+    .replace(/\*\*/g, '**')
+    .replace(/elif\s+(.+?):/g, 'else if ($1):')
+    .replace(/^(\s*)if\s+(.+?):\s*$/gm, '$1if ($2) {')
+    .replace(/^(\s*)else if\s+(.+?):\s*$/gm, '$1} else if ($2) {')
+    .replace(/^(\s*)else:\s*$/gm, '$1} else {')
+    // FIX: tuple unpacking in for loops e.g. "for a, b in zip(x, y):"
+    .replace(/^(\s*)for\s+([a-zA-Z_]\w*)\s*,\s*([a-zA-Z_]\w*)\s+in\s+(.+?):\s*$/gm,
+      '$1for (let [__$2, __$3] of $4) { let $2 = __$2; let $3 = __$3;')
+    // FIX: tuple unpacking for enumerate "for i, val in enumerate(...):"
+    .replace(/^(\s*)for\s+(\w+)\s+in\s+range\s*\(/gm, '$1for (let $2 of __py.range(')
+    .replace(/^(\s*)for\s+(\w+)\s+in\s+(\S.+?):\s*$/gm, '$1for (let $2 of $3) {')
+    .replace(/^(\s*)while\s+(.+?):\s*$/gm, '$1while ($2) {')
+    .replace(/^(\s*)def\s+(\w+)\s*\((.*?)\):\s*$/gm, '$1function $2($3) {')
+    .replace(/^\s*$/gm, '')
+    ;
+  
+  // Handle closing braces by indentation
+  const lines = js.split('\n');
+  const result = [];
+  const indentStack = [0];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue;
+    const indent = line.match(/^(\s*)/)[1].length;
+    while (indentStack.length > 1 && indent < indentStack[indentStack.length-1]) {
+      indentStack.pop();
+      result.push(' '.repeat(indentStack[indentStack.length-1]) + '}');
+    }
+    if (line.trim().endsWith('{')) indentStack.push(indent + 4);
+    // Fix for-range closing paren
+    let processedLine = line;
+    if (line.match(/for \(let \w+ of __py\.range\(/)) {
+      processedLine = line.replace(/\)\s*\{$/, ')) {');
+    }
+    result.push(processedLine);
+  }
+  while (indentStack.length > 1) { indentStack.pop(); result.push('}'); }
+  
+  const finalJs = result.join('\n');
+  const fn = new Function('__py', finalJs);
+  fn(pyBuiltins);
+}
+
+function addOutput(text, type = 'normal') {
+  const body = document.getElementById('output-body');
+  const line = document.createElement('div');
+  line.className = 'output-line ' + type;
+  line.textContent = text;
+  body.appendChild(line);
+  body.scrollTop = body.scrollHeight;
+}
+function clearOutput() {
+  const body = document.getElementById('output-body');
+  body.innerHTML = '';
+}
+function sendInput() {
+  const v = document.getElementById('stdin-input').value;
+  addOutput('> ' + v, 'info');
+}
+
+// ─── LEARNING MODE ───
+var modules = [
+  { emoji:'🐍', title:'Introduction to Python', speech:"Python is like giving instructions to a computer! Let's start our adventure!", fact:"Python is one of the most popular programming languages in the world!", quiz:{q:"Who created Python?",opts:["Guido van Rossum","Bill Gates","Elon Musk","Steve Jobs"],ans:0}, code:`<span class="comment"># This is your first Python program!</span>\n<span class="fn">print</span>(<span class="str">"Hello, Python World! 🐍"</span>)\n<span class="fn">print</span>(<span class="str">"I am learning Python!"</span>)`, tryCode:`print("Hello!")` },
+  { emoji:'💬', title:'Print Statement', speech:"print() is how Python talks to you! It shows text on the screen.", fact:"print() can show text, numbers, and even emojis!", quiz:{q:"Which is correct?",opts:['print "Hello"','print("Hello")','Print("Hello")','PRINT("Hello")'],ans:1}, code:`<span class="fn">print</span>(<span class="str">"Hello, World!"</span>)\n<span class="fn">print</span>(<span class="str">"I love coding! 🎉"</span>)\n<span class="fn">print</span>(<span class="num">42</span>)\n<span class="fn">print</span>(<span class="num">3.14</span>)`, tryCode:`print("My name is ...")\nprint("I am ... years old")` },
+  { emoji:'📦', title:'Variables', speech:"Variables are like labeled boxes that store information. Give them good names!", fact:"Variable names can't start with numbers. x1 works, but 1x doesn't!", quiz:{q:"Which variable name is correct?",opts:['1name','my name','my_name','My-Name'],ans:2}, code:`<span class="var">name</span> = <span class="str">"Alice"</span>\n<span class="var">age</span> = <span class="num">10</span>\n<span class="var">height</span> = <span class="num">1.5</span>\n<span class="fn">print</span>(<span class="var">name</span>)\n<span class="fn">print</span>(<span class="var">age</span>)`, tryCode:`my_name = "Your Name Here"\nmy_age = 10\nprint(my_name)\nprint(my_age)` },
+  { emoji:'🔢', title:'Data Types', speech:"Python has different types of data — numbers, text, and more! Each type has superpowers!", fact:"Python automatically figures out what type your data is — smart, right?", quiz:{q:"What type is the value 42?",opts:['String','Float','Integer','Boolean'],ans:2}, code:`<span class="var">my_int</span> = <span class="num">42</span>        <span class="comment"># Integer (whole number)</span>\n<span class="var">my_float</span> = <span class="num">3.14</span>     <span class="comment"># Float (decimal)</span>\n<span class="var">my_str</span> = <span class="str">"Hello"</span>   <span class="comment"># String (text)</span>\n<span class="var">my_bool</span> = <span class="kw">True</span>    <span class="comment"># Boolean (True/False)</span>\n<span class="fn">print</span>(<span class="fn">type</span>(<span class="var">my_int</span>))`, tryCode:`x = 10\ny = 3.14\nz = "Python"\nprint(type(x))\nprint(type(y))\nprint(type(z))` },
+  { emoji:'🔤', title:'Strings', speech:"Strings are text! You can do SO much with them — slice, join, uppercase and more!", fact:"You can multiply strings! 'ha' * 3 gives you 'hahaha'", quiz:{q:'How do you create a string?',opts:['name = Alice','name = "Alice"','name = (Alice)','string name = Alice'],ans:1}, code:`<span class="var">greeting</span> = <span class="str">"Hello, World!"</span>\n<span class="fn">print</span>(<span class="var">greeting</span>.<span class="fn">upper</span>())\n<span class="fn">print</span>(<span class="var">greeting</span>.<span class="fn">lower</span>())\n<span class="fn">print</span>(<span class="fn">len</span>(<span class="var">greeting</span>))\n<span class="fn">print</span>(<span class="str">"ha"</span> * <span class="num">3</span>)`, tryCode:`name = "Python"\nprint(name.upper())\nprint(len(name))\nprint(name + " is fun!")` },
+  { emoji:'➕', title:'Math Operations', speech:"Python is a super calculator! +, -, *, /, and even ** for powers!", fact:"The // operator does floor division — it rounds down the result!", quiz:{q:"What does 2 ** 3 equal?",opts:['5','6','8','9'],ans:2}, code:`<span class="fn">print</span>(<span class="num">5</span> + <span class="num">3</span>)   <span class="comment"># Addition = 8</span>\n<span class="fn">print</span>(<span class="num">10</span> - <span class="num">4</span>)  <span class="comment"># Subtraction = 6</span>\n<span class="fn">print</span>(<span class="num">3</span> * <span class="num">4</span>)   <span class="comment"># Multiplication = 12</span>\n<span class="fn">print</span>(<span class="num">15</span> / <span class="num">3</span>)  <span class="comment"># Division = 5.0</span>\n<span class="fn">print</span>(<span class="num">2</span> ** <span class="num">3</span>)  <span class="comment"># Power = 8</span>`, tryCode:`print(100 + 200)\nprint(50 * 4)\nprint(2 ** 10)` },
+  { emoji:'❓', title:'User Input', speech:"input() lets you ask questions! Your program can talk to the user!", fact:"input() always returns a string. Use int() to convert it to a number!", quiz:{q:"What function gets input from user?",opts:['get()','ask()','input()','read()'],ans:2}, code:`<span class="var">name</span> = <span class="fn">input</span>(<span class="str">"What is your name? "</span>)\n<span class="fn">print</span>(<span class="str">"Hello, "</span> + <span class="var">name</span> + <span class="str">"!"</span>)\n<span class="var">age</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"How old are you? "</span>))\n<span class="fn">print</span>(<span class="str">"You are"</span>, <span class="var">age</span>, <span class="str">"years old!"</span>)`, tryCode:`name = input("Enter your name: ")\nprint("Welcome, " + name + "!")` },
+  { emoji:'🔀', title:'If Statements', speech:"If statements let your program make decisions! Like a crossroads in a game!", fact:"Python uses indentation (spaces) instead of curly braces. Neat, huh?", quiz:{q:"Which keyword checks another condition after if?",opts:['else','then','when','elif'],ans:3}, code:`<span class="var">age</span> = <span class="num">12</span>\n<span class="kw">if</span> <span class="var">age</span> >= <span class="num">18</span>:\n    <span class="fn">print</span>(<span class="str">"You can vote!"</span>)\n<span class="kw">elif</span> <span class="var">age</span> >= <span class="num">13</span>:\n    <span class="fn">print</span>(<span class="str">"You're a teen!"</span>)\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">"You're a child!"</span>)`, tryCode:`score = 85\nif score >= 90:\n    print("A grade!")\nelif score >= 80:\n    print("B grade!")\nelse:\n    print("Keep trying!")` },
+  { emoji:'🔁', title:'For Loops', speech:"For loops repeat code! Perfect for doing things many times without typing it over and over!", fact:"The range() function creates a sequence of numbers. range(5) gives 0,1,2,3,4", quiz:{q:"What does range(3) produce?",opts:['1,2,3','0,1,2,3','0,1,2','1,2,3,4'],ans:2}, code:`<span class="kw">for</span> <span class="var">i</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>):\n    <span class="fn">print</span>(<span class="str">"Count:"</span>, <span class="var">i</span>)\n\n<span class="kw">for</span> <span class="var">fruit</span> <span class="kw">in</span> [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]:\n    <span class="fn">print</span>(<span class="str">"Fruit:"</span>, <span class="var">fruit</span>)`, tryCode:`for i in range(5):\n    print("Star", i+1, "⭐")` },
+  { emoji:'🌀', title:'While Loops', speech:"While loops keep going as long as something is true. They're like 'keep doing this until I say stop!'", fact:"Be careful! If the condition never becomes False, you get an infinite loop!", quiz:{q:"When does a while loop stop?",opts:['After 10 times','When condition is False','Never','When you press Enter'],ans:1}, code:`<span class="var">count</span> = <span class="num">0</span>\n<span class="kw">while</span> <span class="var">count</span> < <span class="num">5</span>:\n    <span class="fn">print</span>(<span class="str">"Count is:"</span>, <span class="var">count</span>)\n    <span class="var">count</span> += <span class="num">1</span>\n<span class="fn">print</span>(<span class="str">"Done! 🎉"</span>)`, tryCode:`n = 1\nwhile n <= 5:\n    print(n, "x", n, "=", n*n)\n    n += 1` },
+  { emoji:'📋', title:'Lists', speech:"Lists store multiple items in one variable! Like a shopping list for your code!", fact:"Lists can contain different types of data: numbers, strings, even other lists!", quiz:{q:"How do you create a list in Python?",opts:['(1, 2, 3)','[1, 2, 3]','{1, 2, 3}','<1, 2, 3>'],ans:1}, code:`<span class="var">fruits</span> = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]\n<span class="fn">print</span>(<span class="var">fruits</span>)\n<span class="fn">print</span>(<span class="var">fruits</span>[<span class="num">0</span>])  <span class="comment"># First item</span>\n<span class="var">fruits</span>.<span class="fn">append</span>(<span class="str">"mango"</span>)\n<span class="fn">print</span>(<span class="fn">len</span>(<span class="var">fruits</span>))`, tryCode:`colors = ["red", "green", "blue"]\nprint(colors)\nprint("First:", colors[0])\nprint("Count:", len(colors))` },
+  { emoji:'🔒', title:'Tuples', speech:"Tuples are like lists but they can't be changed! Once created, they stay the same — like a locked box.", fact:"Tuples are faster than lists because they're immutable (unchangeable)!", quiz:{q:"How do you create a tuple?",opts:['[1, 2, 3]','{1, 2, 3}','(1, 2, 3)','<1, 2, 3>'],ans:2}, code:`<span class="var">colors</span> = (<span class="str">"red"</span>, <span class="str">"green"</span>, <span class="str">"blue"</span>)\n<span class="fn">print</span>(<span class="var">colors</span>)\n<span class="fn">print</span>(<span class="var">colors</span>[<span class="num">0</span>])\n<span class="fn">print</span>(<span class="fn">len</span>(<span class="var">colors</span>))\n<span class="comment"># colors[0] = "yellow"  # This would cause an error!</span>`, tryCode:`point = (10, 20)\nprint("X:", point[0])\nprint("Y:", point[1])` },
+  { emoji:'📖', title:'Dictionaries', speech:"Dictionaries store key-value pairs! Like a real dictionary where you look up a word to find its meaning.", fact:"Dictionary keys must be unique! No two keys can be the same.", quiz:{q:"How do you access a value in a dictionary?",opts:['dict[0]','dict.value','dict["key"]','dict(key)'],ans:2}, code:`<span class="var">person</span> = {\n    <span class="str">"name"</span>: <span class="str">"Alice"</span>,\n    <span class="str">"age"</span>: <span class="num">10</span>,\n    <span class="str">"hobby"</span>: <span class="str">"coding"</span>\n}\n<span class="fn">print</span>(<span class="var">person</span>[<span class="str">"name"</span>])\n<span class="fn">print</span>(<span class="var">person</span>[<span class="str">"age"</span>])`, tryCode:`student = {"name": "Bob", "grade": "A"}\nprint(student["name"])\nprint(student["grade"])` },
+  { emoji:'🗃️', title:'Sets', speech:"Sets are like lists but they don't allow duplicates. Great for finding unique items!", fact:"Sets don't have an order, so you can't access items by index!", quiz:{q:"What is unique about sets?",opts:['They are ordered','No duplicates','They can only store numbers','They are faster'],ans:1}, code:`<span class="var">numbers</span> = {<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">2</span>, <span class="num">1</span>}\n<span class="fn">print</span>(<span class="var">numbers</span>)  <span class="comment"># Only {1, 2, 3}!</span>\n<span class="var">colors</span> = {<span class="str">"red"</span>, <span class="str">"blue"</span>, <span class="str">"red"</span>}\n<span class="fn">print</span>(<span class="var">colors</span>)  <span class="comment"># Only {"red", "blue"}!</span>`, tryCode:`fruits = {"apple", "banana", "apple", "cherry"}\nprint(fruits)\nprint(len(fruits))` },
+  { emoji:'⚙️', title:'Functions', speech:"Functions are reusable blocks of code! Write once, use many times — like a superpower!", fact:"Functions can call other functions! This is called function composition.", quiz:{q:"Which keyword defines a function?",opts:['function','def','func','define'],ans:1}, code:`<span class="kw">def</span> <span class="fn">greet</span>(<span class="var">name</span>):\n    <span class="fn">print</span>(<span class="str">"Hello,"</span>, <span class="var">name</span> + <span class="str">"! 👋"</span>)\n\n<span class="kw">def</span> <span class="fn">add</span>(<span class="var">a</span>, <span class="var">b</span>):\n    <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>\n\n<span class="fn">greet</span>(<span class="str">"Alice"</span>)\n<span class="fn">print</span>(<span class="fn">add</span>(<span class="num">5</span>, <span class="num">3</span>))`, tryCode:`def say_hello(name):\n    print("Hello,", name)\n\nsay_hello("World")\nsay_hello("Python")` },
+  { emoji:'↩️', title:'Return Values', speech:"Functions can give back answers! The return keyword sends a value back to whoever called the function.", fact:"A function without return gives back None automatically!", quiz:{q:"Which keyword sends a value back from a function?",opts:['send','output','return','give'],ans:2}, code:`<span class="kw">def</span> <span class="fn">square</span>(<span class="var">n</span>):\n    <span class="kw">return</span> <span class="var">n</span> * <span class="var">n</span>\n\n<span class="kw">def</span> <span class="fn">full_name</span>(<span class="var">first</span>, <span class="var">last</span>):\n    <span class="kw">return</span> <span class="var">first</span> + <span class="str">" "</span> + <span class="var">last</span>\n\n<span class="fn">print</span>(<span class="fn">square</span>(<span class="num">5</span>))\n<span class="fn">print</span>(<span class="fn">full_name</span>(<span class="str">"Alice"</span>, <span class="str">"Smith"</span>))`, tryCode:`def double(x):\n    return x * 2\n\nprint(double(5))\nprint(double(100))` },
+  { emoji:'🏛️', title:'Classes & Objects', speech:"Classes are blueprints! You can create many objects from one class — like making many cookies from one cookie cutter!", fact:"Everything in Python is an object! Numbers, strings, lists — all objects!", quiz:{q:"Which keyword creates a class?",opts:['object','class','new','create'],ans:1}, code:`<span class="kw">class</span> <span class="fn">Dog</span>:\n    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, <span class="var">name</span>):\n        <span class="kw">self</span>.<span class="var">name</span> = <span class="var">name</span>\n    <span class="kw">def</span> <span class="fn">bark</span>(<span class="kw">self</span>):\n        <span class="fn">print</span>(<span class="kw">self</span>.<span class="var">name</span>, <span class="str">"says: Woof! 🐕"</span>)\n\n<span class="var">dog1</span> = <span class="fn">Dog</span>(<span class="str">"Buddy"</span>)\n<span class="var">dog1</span>.<span class="fn">bark</span>()`, tryCode:`class Cat:\n    def __init__(self, name):\n        self.name = name\n    def meow(self):\n        print(self.name, "says: Meow!")\n\ncat = Cat("Whiskers")\ncat.meow()` },
+  { emoji:'🎯', title:'Boolean & Logic', speech:"Booleans are True or False — yes or no! They're the brains behind all decisions in your code.", fact:"In Python, 0 is False and any other number is True!", quiz:{q:"What are the two boolean values?",opts:['yes/no','1/0','True/False','on/off'],ans:2}, code:`<span class="var">is_sunny</span> = <span class="kw">True</span>\n<span class="var">is_raining</span> = <span class="kw">False</span>\n<span class="fn">print</span>(<span class="var">is_sunny</span> <span class="kw">and</span> <span class="var">is_raining</span>)\n<span class="fn">print</span>(<span class="var">is_sunny</span> <span class="kw">or</span> <span class="var">is_raining</span>)\n<span class="fn">print</span>(<span class="kw">not</span> <span class="var">is_raining</span>)`, tryCode:`x = 10\nprint(x > 5)\nprint(x == 10)\nprint(x < 3)` },
+  { emoji:'🔍', title:'Comparison Operators', speech:"Comparison operators compare two values! They always give you True or False as the answer.", fact:"== checks equality, but = assigns a value. Don't mix them up!", quiz:{q:"Which checks if two values are equal?",opts:['=','==','===','equals'],ans:1}, code:`<span class="fn">print</span>(<span class="num">5</span> == <span class="num">5</span>)   <span class="comment"># True</span>\n<span class="fn">print</span>(<span class="num">5</span> != <span class="num">3</span>)   <span class="comment"># True (not equal)</span>\n<span class="fn">print</span>(<span class="num">10</span> > <span class="num">5</span>)   <span class="comment"># True</span>\n<span class="fn">print</span>(<span class="num">3</span> < <span class="num">2</span>)    <span class="comment"># False</span>\n<span class="fn">print</span>(<span class="num">5</span> >= <span class="num">5</span>)   <span class="comment"># True</span>`, tryCode:`a = 10\nb = 20\nprint(a < b)\nprint(a == b)\nprint(b > a)` },
+  { emoji:'📝', title:'String Formatting', speech:"String formatting makes it easy to mix text and variables! f-strings are the coolest way to do it!", fact:"f-strings were added in Python 3.6. They're super fast and readable!", quiz:{q:"What prefix makes an f-string?",opts:['s"..."','f"..."','p"..."','v"..."'],ans:1}, code:`<span class="var">name</span> = <span class="str">"Alice"</span>\n<span class="var">age</span> = <span class="num">10</span>\n<span class="fn">print</span>(<span class="str">f"Hello, {name}!"</span>)\n<span class="fn">print</span>(<span class="str">f"You are {age} years old"</span>)\n<span class="fn">print</span>(<span class="str">f"Next year you'll be {age + 1}"</span>)`, tryCode:`subject = "Python"\nrating = 10\nprint(f"I love {subject}!")\nprint(f"Rating: {rating}/10")` },
+  { emoji:'📂', title:'List Methods', speech:"Lists have built-in superpowers called methods! append, pop, sort, and more!", fact:"list.sort() sorts in-place, but sorted(list) returns a new sorted list!", quiz:{q:"Which method adds an item to a list?",opts:['add()','insert()','push()','append()'],ans:3}, code:`<span class="var">nums</span> = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>]\n<span class="var">nums</span>.<span class="fn">append</span>(<span class="num">9</span>)\n<span class="fn">print</span>(<span class="var">nums</span>)\n<span class="var">nums</span>.<span class="fn">sort</span>()\n<span class="fn">print</span>(<span class="var">nums</span>)\n<span class="var">nums</span>.<span class="fn">pop</span>()\n<span class="fn">print</span>(<span class="var">nums</span>)`, tryCode:`animals = ["cat", "dog", "bird"]\nanimals.append("fish")\nprint(animals)\nanimals.sort()\nprint(animals)` },
+  { emoji:'✂️', title:'String Methods', speech:"Strings have tons of useful methods! You can chop, change, and check your text!", fact:"Python has over 40 built-in string methods! You have lots of power!", quiz:{q:"Which method converts string to uppercase?",opts:['toUpper()','upper()','UPPER()','capitalize()'],ans:1}, code:`<span class="var">text</span> = <span class="str">"  Hello, Python!  "</span>\n<span class="fn">print</span>(<span class="var">text</span>.<span class="fn">strip</span>())\n<span class="fn">print</span>(<span class="var">text</span>.<span class="fn">upper</span>())\n<span class="fn">print</span>(<span class="var">text</span>.<span class="fn">replace</span>(<span class="str">"Python"</span>, <span class="str">"World"</span>))\n<span class="fn">print</span>(<span class="var">text</span>.<span class="fn">split</span>(<span class="str">","</span>))`, tryCode:`sentence = "python is amazing"\nprint(sentence.upper())\nprint(sentence.title())\nprint(sentence.replace("python", "Python"))` },
+  { emoji:'🔄', title:'List Slicing', speech:"Slicing lets you grab specific parts of a list or string — like cutting a piece of cake!", fact:"Negative indices count from the end! list[-1] is the last item!", quiz:{q:"What does list[1:3] return?",opts:['Items 1 and 2','Items 1,2 and 3','Item 2 only','Items 0,1,2'],ans:0}, code:`<span class="var">nums</span> = [<span class="num">0</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]\n<span class="fn">print</span>(<span class="var">nums</span>[<span class="num">1</span>:<span class="num">4</span>])   <span class="comment"># [1, 2, 3]</span>\n<span class="fn">print</span>(<span class="var">nums</span>[:<span class="num">3</span>])    <span class="comment"># [0, 1, 2]</span>\n<span class="fn">print</span>(<span class="var">nums</span>[<span class="num">3</span>:])    <span class="comment"># [3, 4, 5]</span>\n<span class="fn">print</span>(<span class="var">nums</span>[-<span class="num">1</span>])    <span class="comment"># 5 (last item)</span>`, tryCode:`word = "PYTHON"\nprint(word[0:3])\nprint(word[-3:])\nprint(word[::-1])` },
+  { emoji:'🚫', title:'Error Handling', speech:"Errors happen to everyone! try/except lets you handle mistakes gracefully instead of crashing!", fact:"SyntaxError, NameError, TypeError — Python has many error types to help you debug!", quiz:{q:"Which keyword handles errors in Python?",opts:['catch','handle','except','error'],ans:2}, code:`<span class="kw">try</span>:\n    <span class="var">num</span> = <span class="fn">int</span>(<span class="str">"hello"</span>)\n    <span class="fn">print</span>(<span class="var">num</span>)\n<span class="kw">except</span> ValueError:\n    <span class="fn">print</span>(<span class="str">"Oops! That's not a number! 😅"</span>)\n<span class="kw">finally</span>:\n    <span class="fn">print</span>(<span class="str">"Program continues! ✅"</span>)`, tryCode:`try:\n    result = 10 / 0\nexcept ZeroDivisionError:\n    print("Can't divide by zero!")\nprint("Done!")` },
+  { emoji:'📥', title:'Import Modules', speech:"Modules are extra toolboxes! import lets you use code others have written — don't reinvent the wheel!", fact:"Python has thousands of modules! math, random, datetime, os and many more!", quiz:{q:"Which keyword imports a module?",opts:['include','require','import','use'],ans:2}, code:`<span class="kw">import</span> math\n<span class="kw">import</span> random\n\n<span class="fn">print</span>(math.<span class="fn">sqrt</span>(<span class="num">16</span>))\n<span class="fn">print</span>(math.<span class="var">pi</span>)\n<span class="fn">print</span>(random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">10</span>))`, tryCode:`import math\nprint(math.sqrt(25))\nprint(math.pi)\nprint(math.floor(3.7))` },
+  { emoji:'🎲', title:'Random Module', speech:"The random module creates surprises! Perfect for games, passwords, and fun programs!", fact:"random.choice() picks a random item from a list — great for games!", quiz:{q:"Which function picks a random integer?",opts:['random.int()','random.pick()','random.randint()','random.number()'],ans:2}, code:`<span class="kw">import</span> random\n\n<span class="fn">print</span>(random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">6</span>))  <span class="comment"># Roll a dice!</span>\n<span class="var">fruits</span> = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]\n<span class="fn">print</span>(random.<span class="fn">choice</span>(<span class="var">fruits</span>))\n<span class="fn">print</span>(random.<span class="fn">random</span>())  <span class="comment"># 0.0 to 1.0</span>`, tryCode:`import random\nprint("Your lucky number:", random.randint(1, 100))\ncolors = ["red", "blue", "green"]\nprint("Lucky color:", random.choice(colors))` },
+  { emoji:'📐', title:'Math Module', speech:"The math module has powerful math functions! Square roots, pi, trigonometry and more!", fact:"math.inf represents infinity in Python — a number bigger than any number!", quiz:{q:"Which function gives the square root?",opts:['math.power()','math.sqrt()','math.root()','math.sq()'],ans:1}, code:`<span class="kw">import</span> math\n<span class="fn">print</span>(math.<span class="fn">sqrt</span>(<span class="num">144</span>))\n<span class="fn">print</span>(math.<span class="fn">ceil</span>(<span class="num">4.3</span>))   <span class="comment"># Round up</span>\n<span class="fn">print</span>(math.<span class="fn">floor</span>(<span class="num">4.9</span>))  <span class="comment"># Round down</span>\n<span class="fn">print</span>(math.<span class="var">pi</span>)`, tryCode:`import math\nprint(math.sqrt(100))\nprint(math.pow(2, 8))\nprint(round(math.pi, 2))` },
+  { emoji:'🕐', title:'Datetime Module', speech:"The datetime module handles dates and times! Perfect for clocks, calendars, and schedulers!", fact:"Python counts time from January 1, 1970 — called the Unix Epoch!", quiz:{q:"Which module handles dates and times?",opts:['time','clock','datetime','calendar'],ans:2}, code:`<span class="kw">from</span> datetime <span class="kw">import</span> datetime\n\n<span class="var">now</span> = datetime.<span class="fn">now</span>()\n<span class="fn">print</span>(<span class="var">now</span>.<span class="var">year</span>)\n<span class="fn">print</span>(<span class="var">now</span>.<span class="var">month</span>)\n<span class="fn">print</span>(<span class="var">now</span>.<span class="fn">strftime</span>(<span class="str">"%Y-%m-%d"</span>))`, tryCode:`from datetime import datetime\nnow = datetime.now()\nprint("Year:", now.year)\nprint("Hour:", now.hour)` },
+  { emoji:'🔑', title:'Dictionary Methods', speech:"Dictionaries have powerful methods! Get all keys, values, or items at once!", fact:"dict.get() is safer than dict[key] — it won't crash if the key doesn't exist!", quiz:{q:"Which method returns all dictionary keys?",opts:['dict.all()','dict.keys()','dict.list()','dict.items()'],ans:1}, code:`<span class="var">info</span> = {<span class="str">"name"</span>: <span class="str">"Alice"</span>, <span class="str">"age"</span>: <span class="num">10</span>, <span class="str">"city"</span>: <span class="str">"NYC"</span>}\n<span class="fn">print</span>(<span class="var">info</span>.<span class="fn">keys</span>())\n<span class="fn">print</span>(<span class="var">info</span>.<span class="fn">values</span>())\n<span class="fn">print</span>(<span class="var">info</span>.<span class="fn">get</span>(<span class="str">"name"</span>, <span class="str">"Unknown"</span>))`, tryCode:`pet = {"name": "Buddy", "type": "dog", "age": 3}\nprint(pet.keys())\nprint(pet.values())\nprint(pet.get("name"))` },
+  { emoji:'🔗', title:'String Join & Split', speech:"join() combines a list into a string, split() breaks a string into a list. They're opposites!", fact:"You can split on any character — spaces, commas, colons, anything!", quiz:{q:"Which method splits a string?",opts:['break()','divide()','split()','separate()'],ans:2}, code:`<span class="var">words</span> = [<span class="str">"Python"</span>, <span class="str">"is"</span>, <span class="str">"awesome"</span>]\n<span class="var">sentence</span> = <span class="str">" "</span>.<span class="fn">join</span>(<span class="var">words</span>)\n<span class="fn">print</span>(<span class="var">sentence</span>)\n\n<span class="var">csv</span> = <span class="str">"a,b,c,d"</span>\n<span class="fn">print</span>(<span class="var">csv</span>.<span class="fn">split</span>(<span class="str">","</span>))`, tryCode:`items = ["milk", "eggs", "bread"]\nlist_str = ", ".join(items)\nprint("Shopping:", list_str)\nprint(list_str.split(", "))` },
+  { emoji:'🧩', title:'Nested Lists', speech:"Lists can hold other lists! This creates grids and tables — like a tic-tac-toe board!", fact:"A 2D list is like a spreadsheet — rows and columns of data!", quiz:{q:"How do you access row 0, column 1 of a 2D list?",opts:['grid[1][0]','grid[0,1]','grid[0][1]','grid(0)(1)'],ans:2}, code:`<span class="var">grid</span> = [\n    [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>],\n    [<span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>],\n    [<span class="num">7</span>, <span class="num">8</span>, <span class="num">9</span>]\n]\n<span class="fn">print</span>(<span class="var">grid</span>[<span class="num">0</span>][<span class="num">0</span>])  <span class="comment"># 1</span>\n<span class="fn">print</span>(<span class="var">grid</span>[<span class="num">1</span>][<span class="num">1</span>])  <span class="comment"># 5</span>`, tryCode:`matrix = [[1,2,3],[4,5,6],[7,8,9]]\nfor row in matrix:\n    print(row)` },
+  { emoji:'🏃', title:'List Comprehensions', speech:"List comprehensions create lists in one line! It's like a supercharged for loop that fits in a box!", fact:"List comprehensions are often faster than regular for loops!", quiz:{q:"Which creates a list of squares from 0-4?",opts:['squares = [x*x, range(5)]','squares = [x*x for x in range(5)]','squares = (x*x for x in range(5))','squares = {x*x in range(5)}'],ans:1}, code:`<span class="var">squares</span> = [<span class="var">x</span>*<span class="var">x</span> <span class="kw">for</span> <span class="var">x</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">5</span>)]\n<span class="fn">print</span>(<span class="var">squares</span>)\n\n<span class="var">evens</span> = [<span class="var">x</span> <span class="kw">for</span> <span class="var">x</span> <span class="kw">in</span> <span class="fn">range</span>(<span class="num">10</span>) <span class="kw">if</span> <span class="var">x</span> % <span class="num">2</span> == <span class="num">0</span>]\n<span class="fn">print</span>(<span class="var">evens</span>)`, tryCode:`doubles = [x*2 for x in range(6)]\nprint(doubles)\nwords = ["hi", "hello", "hey"]\nupper = [w.upper() for w in words]\nprint(upper)` },
+  { emoji:'⭐', title:'Default Parameters', speech:"Functions can have default values! If you don't pass an argument, it uses the default.", fact:"Default parameters must come AFTER non-default ones in the function definition.", quiz:{q:"What's the output of greet() if def greet(name='World')?",opts:['Error','Hello, ','Hello, World!','Hello, name'],ans:2}, code:`<span class="kw">def</span> <span class="fn">greet</span>(<span class="var">name</span>=<span class="str">"World"</span>, <span class="var">emoji</span>=<span class="str">"👋"</span>):\n    <span class="fn">print</span>(<span class="str">f"Hello, {name}! {emoji}"</span>)\n\n<span class="fn">greet</span>()\n<span class="fn">greet</span>(<span class="str">"Alice"</span>)\n<span class="fn">greet</span>(<span class="str">"Bob"</span>, <span class="str">"🚀"</span>)`, tryCode:`def power(base, exp=2):\n    return base ** exp\n\nprint(power(3))\nprint(power(2, 10))` },
+  { emoji:'♾️', title:'Recursion', speech:"Recursion means a function calling itself! Like looking up a word in a dictionary that uses the same word.", fact:"Every recursive function needs a 'base case' — a point where it stops calling itself!", quiz:{q:"What is required to stop infinite recursion?",opts:['A loop','A base case','An import','A class'],ans:1}, code:`<span class="kw">def</span> <span class="fn">countdown</span>(<span class="var">n</span>):\n    <span class="kw">if</span> <span class="var">n</span> <= <span class="num">0</span>:\n        <span class="fn">print</span>(<span class="str">"Blast off! 🚀"</span>)\n    <span class="kw">else</span>:\n        <span class="fn">print</span>(<span class="var">n</span>)\n        <span class="fn">countdown</span>(<span class="var">n</span> - <span class="num">1</span>)\n\n<span class="fn">countdown</span>(<span class="num">5</span>)`, tryCode:`def factorial(n):\n    if n == 0:\n        return 1\n    return n * factorial(n-1)\n\nprint(factorial(5))\nprint(factorial(10))` },
+  { emoji:'🔬', title:'isinstance & type', speech:"isinstance() checks if a variable is a specific type — super useful for validation!", fact:"isinstance(x, (int, float)) checks if x is either int or float at once!", quiz:{q:"Which function checks if x is an integer?",opts:['type(x) is int','checktype(x)','x.isint()','typeof(x) == int'],ans:0}, code:`<span class="var">x</span> = <span class="num">42</span>\n<span class="fn">print</span>(<span class="fn">isinstance</span>(<span class="var">x</span>, <span class="fn">int</span>))\n<span class="fn">print</span>(<span class="fn">isinstance</span>(<span class="var">x</span>, <span class="fn">str</span>))\n<span class="fn">print</span>(<span class="fn">type</span>(<span class="var">x</span>))\n<span class="fn">print</span>(<span class="fn">type</span>(<span class="var">x</span>) == <span class="fn">int</span>)`, tryCode:`values = [42, "hello", 3.14, True]\nfor v in values:\n    print(v, "is int:", isinstance(v, int))` },
+  { emoji:'📎', title:'enumerate()', speech:"enumerate() gives you index AND value at the same time! No more separate counter variables!", fact:"enumerate(list, start=1) starts counting from 1 instead of 0!", quiz:{q:"What does enumerate() provide for each item?",opts:['Just the index','Just the value','Index and value','Length'],ans:2}, code:`<span class="var">fruits</span> = [<span class="str">"apple"</span>, <span class="str">"banana"</span>, <span class="str">"cherry"</span>]\n<span class="kw">for</span> <span class="var">i</span>, <span class="var">fruit</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">fruits</span>):\n    <span class="fn">print</span>(<span class="var">i</span>, <span class="str">":"</span>, <span class="var">fruit</span>)\n\n<span class="kw">for</span> <span class="var">i</span>, <span class="var">fruit</span> <span class="kw">in</span> <span class="fn">enumerate</span>(<span class="var">fruits</span>, <span class="num">1</span>):\n    <span class="fn">print</span>(<span class="str">f"{i}. {fruit}"</span>)`, tryCode:`colors = ["red", "green", "blue"]\nfor num, color in enumerate(colors, 1):\n    print(f"{num}. {color}")` },
+  { emoji:'🤐', title:'zip()', speech:"zip() pairs items from two lists together — like a zipper! Perfect for matching data.", fact:"zip() stops at the shortest list — extra items are ignored!", quiz:{q:"zip(['a','b'], [1,2]) produces?",opts:["[('a',1),('b',2)]",'["a1","b2"]','[a,b,1,2]','error'],ans:0}, code:`<span class="var">names</span> = [<span class="str">"Alice"</span>, <span class="str">"Bob"</span>, <span class="str">"Charlie"</span>]\n<span class="var">scores</span> = [<span class="num">90</span>, <span class="num">85</span>, <span class="num">92</span>]\n\n<span class="kw">for</span> <span class="var">name</span>, <span class="var">score</span> <span class="kw">in</span> <span class="fn">zip</span>(<span class="var">names</span>, <span class="var">scores</span>):\n    <span class="fn">print</span>(<span class="str">f"{name}: {score}"</span>)`, tryCode:`items = ["bread", "milk", "eggs"]\nprices = [2.5, 1.2, 3.0]\nfor item, price in zip(items, prices):\n    print(item + ": $" + str(price))` },
+  { emoji:'🔝', title:'sorted() & reversed()', speech:"sorted() and reversed() arrange your data! Alphabetical, numerical, or backwards!", fact:"sorted() works on any iterable — lists, tuples, strings, dictionaries!", quiz:{q:"Which returns a new sorted list without changing original?",opts:['list.sort()','sorted(list)','list.order()','sort(list)'],ans:1}, code:`<span class="var">nums</span> = [<span class="num">3</span>, <span class="num">1</span>, <span class="num">4</span>, <span class="num">1</span>, <span class="num">5</span>, <span class="num">9</span>]\n<span class="fn">print</span>(<span class="fn">sorted</span>(<span class="var">nums</span>))\n<span class="fn">print</span>(<span class="fn">sorted</span>(<span class="var">nums</span>, reverse=<span class="kw">True</span>))\n<span class="fn">print</span>(<span class="fn">list</span>(<span class="fn">reversed</span>(<span class="var">nums</span>)))`, tryCode:`names = ["Charlie", "Alice", "Bob"]\nprint(sorted(names))\nprint(sorted(names, reverse=True))` },
+  { emoji:'🎭', title:'Lambda Functions', speech:"Lambda functions are tiny one-line functions! Perfect for quick, simple operations.", fact:"Lambda comes from lambda calculus — a mathematical concept from the 1930s!", quiz:{q:"Which creates a lambda that doubles a number?",opts:['lambda: x*2','lambda x: x*2','def lambda(x): x*2','function(x) => x*2'],ans:1}, code:`<span class="var">double</span> = <span class="kw">lambda</span> <span class="var">x</span>: <span class="var">x</span> * <span class="num">2</span>\n<span class="var">add</span> = <span class="kw">lambda</span> <span class="var">a</span>, <span class="var">b</span>: <span class="var">a</span> + <span class="var">b</span>\n\n<span class="fn">print</span>(<span class="fn">double</span>(<span class="num">5</span>))\n<span class="fn">print</span>(<span class="fn">add</span>(<span class="num">3</span>, <span class="num">7</span>))\n\n<span class="var">nums</span> = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>]\n<span class="fn">print</span>(<span class="fn">list</span>(<span class="fn">map</span>(<span class="kw">lambda</span> <span class="var">x</span>: <span class="var">x</span>**<span class="num">2</span>, <span class="var">nums</span>)))`, tryCode:`square = lambda x: x**2\nprint(square(4))\nprint(square(10))` },
+  { emoji:'🗺️', title:'map() & filter()', speech:"map() transforms every item, filter() keeps only matching items! Power tools for lists!", fact:"map() and filter() return iterables — wrap with list() to see the results!", quiz:{q:"Which applies a function to every list item?",opts:['apply()','transform()','map()','each()'],ans:2}, code:`<span class="var">nums</span> = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]\n<span class="var">doubled</span> = <span class="fn">list</span>(<span class="fn">map</span>(<span class="kw">lambda</span> <span class="var">x</span>: <span class="var">x</span>*<span class="num">2</span>, <span class="var">nums</span>))\n<span class="fn">print</span>(<span class="var">doubled</span>)\n<span class="var">evens</span> = <span class="fn">list</span>(<span class="fn">filter</span>(<span class="kw">lambda</span> <span class="var">x</span>: <span class="var">x</span>%<span class="num">2</span>==<span class="num">0</span>, <span class="var">nums</span>))\n<span class="fn">print</span>(<span class="var">evens</span>)`, tryCode:`numbers = [1, 2, 3, 4, 5, 6]\neven = list(filter(lambda x: x%2==0, numbers))\nprint("Evens:", even)` },
+  { emoji:'🌐', title:'Global & Local Variables', speech:"Variables inside functions are local — they can't be seen outside! Global variables exist everywhere.", fact:"Use global keyword to modify a global variable inside a function!", quiz:{q:"Where is a local variable accessible?",opts:['Everywhere','Only in its function','Only in classes','Only when imported'],ans:1}, code:`<span class="var">count</span> = <span class="num">0</span>  <span class="comment"># Global</span>\n\n<span class="kw">def</span> <span class="fn">increment</span>():\n    <span class="kw">global</span> <span class="var">count</span>\n    <span class="var">count</span> += <span class="num">1</span>\n\n<span class="fn">increment</span>()\n<span class="fn">increment</span>()\n<span class="fn">print</span>(<span class="var">count</span>)  <span class="comment"># 2</span>`, tryCode:`score = 0\n\ndef add_points(n):\n    global score\n    score += n\n\nadd_points(10)\nadd_points(25)\nprint("Score:", score)` },
+  { emoji:'📦', title:'*args & **kwargs', speech:"*args accepts any number of arguments, **kwargs accepts named arguments. Super flexible functions!", fact:"The names args and kwargs are convention — you can use *stuff and **things!", quiz:{q:"What does *args allow?",opts:['Only one argument','Keyword arguments','Multiple positional arguments','No arguments'],ans:2}, code:`<span class="kw">def</span> <span class="fn">add_all</span>(*<span class="var">nums</span>):\n    <span class="kw">return</span> <span class="fn">sum</span>(<span class="var">nums</span>)\n\n<span class="kw">def</span> <span class="fn">info</span>(**<span class="var">details</span>):\n    <span class="kw">for</span> <span class="var">k</span>, <span class="var">v</span> <span class="kw">in</span> <span class="var">details</span>.<span class="fn">items</span>():\n        <span class="fn">print</span>(<span class="str">f"{k}: {v}"</span>)\n\n<span class="fn">print</span>(<span class="fn">add_all</span>(<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>))\n<span class="fn">info</span>(name=<span class="str">"Alice"</span>, age=<span class="num">10</span>)`, tryCode:`def total(*args):\n    return sum(args)\n\nprint(total(1, 2, 3))\nprint(total(10, 20, 30, 40))` },
+  { emoji:'🎨', title:'Inheritance', speech:"Classes can inherit from other classes! The child class gets all the parent's superpowers and can add more!", fact:"Python supports multiple inheritance — a class can have multiple parents!", quiz:{q:"What keyword is used for inheritance?",opts:['extends','inherits','(ParentClass)','super()'],ans:2}, code:`<span class="kw">class</span> <span class="fn">Animal</span>:\n    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>, <span class="var">name</span>):\n        <span class="kw">self</span>.<span class="var">name</span> = <span class="var">name</span>\n    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):\n        <span class="fn">print</span>(<span class="str">"..."</span>)\n\n<span class="kw">class</span> <span class="fn">Dog</span>(<span class="fn">Animal</span>):\n    <span class="kw">def</span> <span class="fn">speak</span>(<span class="kw">self</span>):\n        <span class="fn">print</span>(<span class="kw">self</span>.<span class="var">name</span>, <span class="str">"says Woof! 🐕"</span>)`, tryCode:`class Shape:\n    def area(self):\n        return 0\n\nclass Square(Shape):\n    def __init__(self, side):\n        self.side = side\n    def area(self):\n        return self.side ** 2\n\ns = Square(5)\nprint("Area:", s.area())` },
+  { emoji:'📄', title:'File Reading', speech:"Python can read files! Open, read, and process text files — the gateway to real-world data!", fact:"Always close files after reading, or use the 'with' statement which closes automatically!", quiz:{q:"Which mode opens a file for reading?",opts:['"w"','"r"','"a"','"x"'],ans:1}, code:`<span class="comment"># Writing a file first</span>\n<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"w"</span>) <span class="kw">as</span> <span class="var">f</span>:\n    <span class="var">f</span>.<span class="fn">write</span>(<span class="str">"Hello, File!"</span>)\n\n<span class="comment"># Reading the file back</span>\n<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"test.txt"</span>, <span class="str">"r"</span>) <span class="kw">as</span> <span class="var">f</span>:\n    <span class="fn">print</span>(<span class="var">f</span>.<span class="fn">read</span>())`, tryCode:`# Simulated file reading\ncontent = "Line 1\\nLine 2\\nLine 3"\nfor line in content.split("\\n"):\n    print(line)` },
+  { emoji:'💾', title:'File Writing', speech:"Python can write files too! Save your data permanently — programs that remember things!", fact:"Mode 'a' appends to a file, 'w' overwrites it. Be careful with 'w'!", quiz:{q:"Which mode appends to an existing file?",opts:['"w"','"r"','"a"','"n"'],ans:2}, code:`<span class="kw">with</span> <span class="fn">open</span>(<span class="str">"scores.txt"</span>, <span class="str">"w"</span>) <span class="kw">as</span> <span class="var">f</span>:\n    <span class="var">f</span>.<span class="fn">write</span>(<span class="str">"Alice: 90\\n"</span>)\n    <span class="var">f</span>.<span class="fn">write</span>(<span class="str">"Bob: 85\\n"</span>)\n\n<span class="fn">print</span>(<span class="str">"File written successfully! ✅"</span>)`, tryCode:`# Simulate writing\nlines = ["Hello", "World", "Python"]\nfor line in lines:\n    print(f"Writing: {line}")` },
+  { emoji:'🌊', title:'Generators', speech:"Generators produce values one at a time! They're memory-efficient — great for big data!", fact:"yield is like return but the function remembers where it stopped!", quiz:{q:"Which keyword makes a generator function?",opts:['return','generate','yield','produce'],ans:2}, code:`<span class="kw">def</span> <span class="fn">count_up</span>(<span class="var">n</span>):\n    <span class="var">i</span> = <span class="num">0</span>\n    <span class="kw">while</span> <span class="var">i</span> < <span class="var">n</span>:\n        <span class="kw">yield</span> <span class="var">i</span>\n        <span class="var">i</span> += <span class="num">1</span>\n\n<span class="kw">for</span> <span class="var">num</span> <span class="kw">in</span> <span class="fn">count_up</span>(<span class="num">5</span>):\n    <span class="fn">print</span>(<span class="var">num</span>)`, tryCode:`def squares(n):\n    for i in range(n):\n        yield i * i\n\nfor sq in squares(5):\n    print(sq)` },
+  { emoji:'🎁', title:'Decorators', speech:"Decorators add extra powers to functions without changing them! Like wrapping a gift in beautiful paper!", fact:"@staticmethod and @classmethod are built-in decorators in Python classes!", quiz:{q:"How do you apply a decorator to a function?",opts:['function.decorator()','@decorator above def','decorator(function)','#decorator'],ans:1}, code:`<span class="kw">def</span> <span class="fn">shout</span>(<span class="var">func</span>):\n    <span class="kw">def</span> <span class="fn">wrapper</span>():\n        <span class="fn">print</span>(<span class="str">"🎉 START!"</span>)\n        <span class="fn">func</span>()\n        <span class="fn">print</span>(<span class="str">"🎉 END!"</span>)\n    <span class="kw">return</span> <span class="var">wrapper</span>\n\n@<span class="fn">shout</span>\n<span class="kw">def</span> <span class="fn">greet</span>():\n    <span class="fn">print</span>(<span class="str">"Hello!"</span>)\n\n<span class="fn">greet</span>()`, tryCode:`def make_bold(func):\n    def wrapper():\n        return "**" + func() + "**"\n    return wrapper\n\n@make_bold\ndef message():\n    return "Hello World"\n\nprint(message())` },
+  { emoji:'🔐', title:'Encapsulation', speech:"Encapsulation hides data inside classes! Private attributes start with _ or __ to signal they shouldn't be touched directly.", fact:"Python doesn't truly enforce privacy — it relies on developer trust! _ = 'please don't use this'", quiz:{q:"Which prefix makes an attribute private by convention?",opts:['#','@','_','!'],ans:2}, code:`<span class="kw">class</span> <span class="fn">BankAccount</span>:\n    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="kw">self</span>):\n        <span class="kw">self</span>.<span class="var">_balance</span> = <span class="num">0</span>\n    <span class="kw">def</span> <span class="fn">deposit</span>(<span class="kw">self</span>, <span class="var">amt</span>):\n        <span class="kw">self</span>.<span class="var">_balance</span> += <span class="var">amt</span>\n    <span class="kw">def</span> <span class="fn">get_balance</span>(<span class="kw">self</span>):\n        <span class="kw">return</span> <span class="kw">self</span>.<span class="var">_balance</span>`, tryCode:`class Box:\n    def __init__(self):\n        self._secret = 42\n    def reveal(self):\n        return self._secret\n\nb = Box()\nprint(b.reveal())` },
+  { emoji:'🎮', title:'Simple Game Logic', speech:"Let's build a game! Number guessing, rock-paper-scissors — you have all the tools now!", fact:"Every video game, no matter how complex, is built from the same basic concepts you've learned!", quiz:{q:"What's essential for a guessing game loop?",opts:['A while loop with a condition','Multiple classes','File reading','Decorators'],ans:0}, code:`<span class="kw">import</span> random\n<span class="var">secret</span> = random.<span class="fn">randint</span>(<span class="num">1</span>, <span class="num">10</span>)\n<span class="var">guess</span> = <span class="fn">int</span>(<span class="fn">input</span>(<span class="str">"Guess (1-10): "</span>))\n<span class="kw">if</span> <span class="var">guess</span> == <span class="var">secret</span>:\n    <span class="fn">print</span>(<span class="str">"🎉 You got it!"</span>)\n<span class="kw">else</span>:\n    <span class="fn">print</span>(<span class="str">f"❌ It was {secret}!"</span>)`, tryCode:`import random\nimport math\n\npi_approx = 3.14159\nprint("pi ≈", round(math.pi, 5))\nprint("Match?", round(pi_approx, 3) == round(math.pi, 3))\nprint("Random game id:", random.randint(1000, 9999))` },
+  { emoji:'🏆', title:'Python Best Practices', speech:"Great code is readable, well-named, and documented! Writing clean code is a superpower in itself!", fact:"PEP 8 is Python's style guide — follow it and other coders will love reading your code!", quiz:{q:"What naming style does Python use for variables?",opts:['camelCase','PascalCase','snake_case','SCREAMING_CASE'],ans:2}, code:`<span class="comment"># ✅ Good Python style (PEP 8)</span>\n<span class="kw">def</span> <span class="fn">calculate_area</span>(<span class="var">length</span>, <span class="var">width</span>):\n    <span class="str">"""Calculate the area of a rectangle."""</span>\n    <span class="kw">return</span> <span class="var">length</span> * <span class="var">width</span>\n\n<span class="var">my_area</span> = <span class="fn">calculate_area</span>(<span class="num">10</span>, <span class="num">5</span>)\n<span class="fn">print</span>(<span class="str">f"Area: {my_area}"</span>)`, tryCode:`# Practice clean code!\ndef greet_student(first_name, last_name):\n    """Greet a student by full name."""\n    full_name = first_name + " " + last_name\n    return f"Hello, {full_name}!"\n\nprint(greet_student("Alice", "Smith"))` },
+  { emoji:'🛠️', title:'Debugging Tips', speech:"Debugging is detective work! print() statements are your magnifying glass to find bugs!", fact:"The Python debugger (pdb) lets you step through code line by line — like a time machine!", quiz:{q:"What's the simplest debugging tool?",opts:['A debugger','print() statements','Comments','Type hints'],ans:1}, code:`<span class="comment"># Debugging with print()</span>\n<span class="kw">def</span> <span class="fn">mystery</span>(<span class="var">x</span>):\n    <span class="fn">print</span>(<span class="str">f"Input: {x}"</span>)  <span class="comment"># debug</span>\n    <span class="var">result</span> = <span class="var">x</span> * <span class="num">2</span> + <span class="num">1</span>\n    <span class="fn">print</span>(<span class="str">f"Result: {result}"</span>)  <span class="comment"># debug</span>\n    <span class="kw">return</span> <span class="var">result</span>\n\n<span class="fn">mystery</span>(<span class="num">5</span>)`, tryCode:`def calculate(a, b):\n    print(f"a={a}, b={b}")  # debug line\n    result = a * b - (a + b)\n    print(f"result={result}")  # debug line\n    return result\n\nprint(calculate(4, 5))` },
+  { emoji:'🌟', title:'Python Projects', speech:"Congratulations! You've learned all the basics! Now it's time to build real projects!", fact:"Some of the world's most popular apps — Instagram, YouTube, Dropbox — use Python!", quiz:{q:"Which of these is a great first Python project?",opts:['Building an OS','Creating a calculator','Writing an AI','Building a browser'],ans:1}, code:`<span class="comment"># 🏆 Final Challenge: Mini Calculator!</span>\n<span class="kw">def</span> <span class="fn">calculator</span>():\n    <span class="fn">print</span>(<span class="str">"🧮 Mini Calculator!"</span>)\n    <span class="var">a</span> = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"Number 1: "</span>))\n    <span class="var">op</span> = <span class="fn">input</span>(<span class="str">"Operator (+,-,*,/): "</span>)\n    <span class="var">b</span> = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">"Number 2: "</span>))\n    <span class="kw">if</span> <span class="var">op</span> == <span class="str">"+"</span>: <span class="fn">print</span>(<span class="var">a</span>+<span class="var">b</span>)\n\n<span class="fn">calculator</span>()`, tryCode:`# 🎉 YOU DID IT! Celebrate!\nprint("🏆 Congratulations!")\nprint("🐍 Python Master!")\nprint("🚀 Ready to build amazing things!")\nfor star in range(10):\n    print("⭐" * (star + 1))` },
+];
+
+function renderModules() {
+  const list = document.getElementById('modules-list');
+  list.innerHTML = modules.map((m, i) => `
+    <div class="module-item ${i === currentLesson ? 'active' : ''} ${completedModules.has(i) ? 'completed' : ''}"
+         onclick="selectLesson(${i})" id="mod-${i}">
+      <div class="module-number">${completedModules.has(i) ? '✓' : i+1}</div>
+      <span class="module-emoji">${m.emoji}</span>
+      <div class="module-label">${m.title}</div>
+    </div>
+  `).join('');
+}
+
+function selectLesson(i) {
+  currentLesson = i;
+  renderModules();
+  renderLesson();
+  updateProgress();
+}
+
+function renderLesson() {
+  const m = modules[currentLesson];
+  const content = document.getElementById('lesson-content');
+  const alreadyAnswered = quizAnswered.has(currentLesson);
+
+  content.innerHTML = `
+    <div class="welcome-banner">
+      <div class="welcome-banner-icon">${m.emoji}</div>
+      <div class="welcome-banner-text">
+        <h3>Module ${currentLesson + 1}: ${m.title}</h3>
+        <p>${m.speech}</p>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-chip"><div class="stat-num">${currentLesson + 1}</div><div class="stat-label">Current Module</div></div>
+      <div class="stat-chip"><div class="stat-num">${completedModules.size}</div><div class="stat-label">Completed</div></div>
+      <div class="stat-chip"><div class="stat-num">${currentXP}</div><div class="stat-label">XP Earned</div></div>
+    </div>
+    <div class="lesson-header">
+      <div class="lesson-badge">📚 MODULE ${currentLesson + 1} OF 50</div>
+      <div class="lesson-title">${m.emoji} ${m.title}</div>
+      <div class="lesson-desc">Let's explore this concept together with CognoBot! Every expert was once a beginner. 🌟</div>
+    </div>
+
+    <div class="concept-card highlight">
+      <div class="card-title"><span class="card-icon">💡</span> What is it?</div>
+      <div class="card-body">${getConceptExplanation(currentLesson)}</div>
+    </div>
+
+    <div class="concept-card green">
+      <div class="card-title"><span class="card-icon">👀</span> Code Example</div>
+      <div class="card-body" style="padding:0">
+        <div class="code-block" style="margin:0;border-radius:var(--radius-sm)">
+          <button class="copy-btn-code" onclick="copyCode(this)">Copy</button>
+          ${m.code}
+        </div>
+      </div>
+    </div>
+
+    <div class="try-it-section">
+      <div class="try-it-title">⚡ Try It Yourself!</div>
+      <textarea class="try-editor" id="try-editor-${currentLesson}" rows="5" placeholder="# Write your Python code here..."></textarea>
+      <div class="try-actions">
+        <button class="try-run" onclick="runTryCode(${currentLesson})">▶ Run Code</button>
+        <button style="padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-family:Nunito,sans-serif;font-weight:700;font-size:.82rem" onclick="resetTryCode(${currentLesson})">↺ Reset</button>
+      </div>
+      <div class="try-output" id="try-output-${currentLesson}"></div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-q">🧠 Quick Quiz: ${m.quiz.q}</div>
+      <div class="quiz-options" id="quiz-opts-${currentLesson}">
+        ${m.quiz.opts.map((opt, oi) => `
+          <button class="quiz-opt ${alreadyAnswered ? (oi === m.quiz.ans ? 'correct' : '') : ''}"
+                  onclick="answerQuiz(${currentLesson}, ${oi})"
+                  ${alreadyAnswered ? 'disabled' : ''}>${opt}</button>
+        `).join('')}
+      </div>
+      <div class="quiz-result ${alreadyAnswered ? 'correct' : ''}" id="quiz-result-${currentLesson}"
+           style="display:${alreadyAnswered ? 'block' : 'none'}">
+        ${alreadyAnswered ? '✅ Correct! Well done!' : ''}
+      </div>
+    </div>
+  `;
+
+  // Update companion
+  document.getElementById('companion-speech').textContent = m.speech;
+  document.getElementById('fun-fact-text').textContent = m.fact;
+
+  // Scroll to top
+  content.scrollTop = 0;
+}
+
+function getConceptExplanation(i) {
+  const explanations = [
+    "Python is a beginner-friendly programming language created by Guido van Rossum. It reads almost like English, making it perfect for learning to code!",
+    "The print() function displays text, numbers, and variables on screen. It's the first function most Python programmers learn — your program's voice!",
+    "A variable is like a labeled box. You put data inside it and give it a name so you can use it later. Variables can change (vary) their value!",
+    "Every piece of data in Python has a type. Integers are whole numbers, floats have decimals, strings are text, and booleans are True or False!",
+    "Strings are sequences of characters enclosed in quotes. They're how Python handles text — names, messages, sentences, anything with letters!",
+    "Python performs arithmetic just like a calculator. Addition (+), subtraction (-), multiplication (*), division (/), and power (**) are all built-in!",
+    "The input() function pauses your program and waits for the user to type something. It's how your program can ask questions!",
+    "If statements let your program make decisions. Based on conditions, your code can take different paths — making programs smart!",
+    "For loops repeat code for each item in a sequence. Perfect for counting, going through lists, or repeating actions a set number of times!",
+    "While loops keep running as long as a condition is True. They're great when you don't know in advance how many times to repeat!",
+    "Lists are ordered collections that can hold multiple values in one variable. They can be changed, sorted, and have items added or removed!",
+    "Tuples are ordered collections like lists, but immutable — once created, their contents can't be changed. Use them for data that shouldn't change!",
+    "Dictionaries store data as key-value pairs. Instead of a position number, you look up data using a meaningful key — like a real dictionary!",
+    "Sets are unordered collections with no duplicate values. Perfect for finding unique items or checking membership!",
+    "Functions are reusable code blocks. Define a function once, then call it as many times as you want — write once, use forever!",
+    "The return statement sends a value back from a function. Without return, functions do things but don't give back answers!",
+    "Classes are blueprints for creating objects. An object has attributes (data) and methods (actions) — like a real-world thing with properties!",
+    "Booleans represent truth values — True or False. They power all decision-making in your code with and, or, and not operations!",
+    "Comparison operators (==, !=, <, >, <=, >=) compare values and return a boolean. They're the judges of your conditional statements!",
+    "F-strings (formatted string literals) let you embed variables and expressions directly inside strings using {curly braces}. Clean and readable!",
+    "List methods are built-in actions you can perform on lists: append() adds, pop() removes, sort() orders, and many more!",
+    "String methods transform and inspect text: upper() capitalizes, split() divides, strip() removes whitespace, replace() substitutes!",
+    "Slicing lets you extract portions of sequences using [start:end:step] notation. Negative indices count from the end!",
+    "Try/except blocks handle errors gracefully. Instead of crashing, your program can catch problems and respond helpfully!",
+    "Modules are files containing Python code. Import them to access functions and data others have already written!",
+    "The random module generates random numbers and makes random choices — essential for games and simulations!",
+    "The math module provides mathematical functions like sqrt(), floor(), ceil(), and constants like pi and e!",
+    "The datetime module works with dates and times, letting you create calendars, timers, and time-based programs!",
+    "Dictionary methods like keys(), values(), items(), and get() help you access and manage dictionary data efficiently!",
+    "join() combines list items into a string. split() breaks a string into a list. Together they handle all text-to-list conversions!",
+    "Nested lists are lists containing other lists, creating 2D structures like grids, tables, and matrices!",
+    "List comprehensions create lists in one compact line. They combine a for loop and optional if statement into a single expression!",
+    "Default parameters give function arguments fallback values. If a caller doesn't provide them, the default is used automatically!",
+    "Recursive functions call themselves! They break complex problems into simpler versions of the same problem!",
+    "isinstance() checks if a value belongs to a specific type. type() reveals the exact type of any Python object!",
+    "enumerate() adds a counter to any sequence, giving you both the index and value in each loop iteration!",
+    "zip() pairs elements from multiple sequences together, letting you loop through multiple lists simultaneously!",
+    "sorted() returns a new sorted list. reversed() returns an iterator in reverse order. Both leave the original unchanged!",
+    "Lambda functions are anonymous one-line functions. Great for short operations, especially with map() and filter()!",
+    "map() applies a function to every item in a list. filter() keeps only items that match a condition — functional programming!",
+    "Local variables exist only inside functions. Global variables exist everywhere. The global keyword lets functions modify globals!",
+    "*args collects extra positional arguments as a tuple. **kwargs collects extra keyword arguments as a dictionary!",
+    "Inheritance lets a child class gain all the attributes and methods of a parent class, then add its own unique features!",
+    "Encapsulation bundles data and methods inside classes, controlling access with private (_) and public attributes!",
+    "File reading lets you load data from .txt, .csv, and other files. The with statement ensures files are properly closed!",
+    "File writing saves data to files permanently. Mode 'w' overwrites, 'a' appends, and 'x' creates new files only!",
+    "Generators produce values one at a time using yield, consuming minimal memory — perfect for large datasets!",
+    "Decorators modify or enhance functions without changing their source code. They wrap functions with additional behavior!",
+    "Debugging means finding and fixing errors. Print statements, reading error messages, and logical thinking are your best tools!",
+    "You've learned all Python basics! Variables, loops, functions, classes, modules, files — you're ready to build anything! 🏆"
+  ];
+  return explanations[i] || "Explore this fascinating Python concept!";
+}
+
+function runTryCode(lessonIdx) {
+  const editor = document.getElementById(`try-editor-${lessonIdx}`);
+  const output = document.getElementById(`try-output-${lessonIdx}`);
+  const code = editor.value;
+  output.style.display = 'block';
+  output.textContent = '';
+  const results = [];
+  const tempPrint = (...args) => results.push(args.map(a => String(a)).join(' '));
+  try {
+    let js = code
+      .replace(/^#.*$/gm, '')
+      .replace(/print\s*\(/g, '__tp(')
+      .replace(/\blen\s*\(/g, '(a=>Array.isArray(a)?a.length:(typeof a==="string"?a.length:0))(')
+      .replace(/\brange\s*\(/g, '(function(){var a=Array.from(arguments);var s=a.length>1?a[0]:0,e=a.length>1?a[1]:a[0],st=a[2]||1;var r=[];for(var i=s;i<e;i+=st)r.push(i);return r;})(')
+      .replace(/\bint\s*\(/g, 'parseInt(')
+      .replace(/\bfloat\s*\(/g, 'parseFloat(')
+      .replace(/\bstr\s*\(/g, 'String(')
+      .replace(/\babs\s*\(/g, 'Math.abs(')
+      .replace(/\bmax\s*\(/g, 'Math.max(')
+      .replace(/\bmin\s*\(/g, 'Math.min(')
+      .replace(/\bsum\s*\(/g, '(a=>a.reduce((x,y)=>x+y,0))(')
+      .replace(/\bsorted\s*\(/g, '(a=>[...a].sort((x,y)=>x-y))(')
+      .replace(/\breversed\s*\(/g, '(a=>[...a].reverse())(')
+      .replace(/\bTrue\b/g, 'true').replace(/\bFalse\b/g, 'false').replace(/\bNone\b/g, 'null')
+      .replace(/\band\b/g, '&&').replace(/\bor\b/g, '||').replace(/\bnot\b/g, '!')
+      .replace(/elif\s+(.+?):/g, 'else if ($1):')
+      .replace(/^(\s*)if\s+(.+?):\s*$/gm, '$1if ($2) {')
+      .replace(/^(\s*)else if\s+(.+?):\s*$/gm, '$1} else if ($2) {')
+      .replace(/^(\s*)else:\s*$/gm, '$1} else {')
+      .replace(/^(\s*)for\s+(\w+)\s+in\s+range\s*\(/gm, '$1for (let $2 of (function(){var a=arguments;')
+      .replace(/^(\s*)for\s+(\w+)\s+in\s+(\w+):\s*$/gm, '$1for (let $2 of $3) {')
+      .replace(/^(\s*)while\s+(.+?):\s*$/gm, '$1while ($2) {')
+      .replace(/^(\s*)def\s+(\w+)\s*\((.*?)\):\s*$/gm, '$1function $2($3) {');
+    // Simple indentation-based brace closing
+    const lines2 = js.split('\n');
+    const res2 = []; const stack2 = [0];
+    for (let l of lines2) {
+      if (!l.trim()) continue;
+      const ind = l.match(/^(\s*)/)[1].length;
+      while (stack2.length > 1 && ind < stack2[stack2.length-1]) { stack2.pop(); res2.push('}'); }
+      if (l.trim().endsWith('{')) stack2.push(ind + 4);
+      res2.push(l);
+    }
+    while (stack2.length > 1) { stack2.pop(); res2.push('}'); }
+    const fn2 = new Function('__tp', res2.join('\n'));
+    fn2(tempPrint);
+    output.textContent = results.join('\n') || '(no output)';
+    output.style.color = 'var(--accent-green)';
+  } catch(e) {
+    output.textContent = '❌ Error: ' + e.message;
+    output.style.color = '#f87171';
+  }
+}
+
+function resetTryCode(i) {
+  document.getElementById(`try-editor-${i}`).value = '';
+  const out = document.getElementById(`try-output-${i}`);
+  out.style.display = 'none'; out.textContent = '';
+}
+
+function answerQuiz(lessonIdx, optIdx) {
+  if (quizAnswered.has(lessonIdx)) return;
+  const m = modules[lessonIdx];
+  const opts = document.querySelectorAll(`#quiz-opts-${lessonIdx} .quiz-opt`);
+  const result = document.getElementById(`quiz-result-${lessonIdx}`);
+  opts.forEach((o, i) => {
+    o.disabled = true;
+    if (i === m.quiz.ans) o.classList.add('correct');
+    else if (i === optIdx) o.classList.add('wrong');
+  });
+  quizAnswered.add(lessonIdx);
+  if (optIdx === m.quiz.ans) {
+    result.textContent = '✅ Excellent! That\'s correct!';
+    result.className = 'quiz-result correct';
+    earnXP(50);
+    checkBadges();
+  } else {
+    result.textContent = `❌ Not quite! The answer is: "${m.quiz.opts[m.quiz.ans]}"`;
+    result.className = 'quiz-result wrong';
+  }
+  result.style.display = 'block';
+  completedModules.add(lessonIdx);
+  renderModules();
+}
+
+function earnXP(amount) {
+  currentXP = Math.min(currentXP + amount, 500);
+  document.getElementById('xp-fill').style.width = (currentXP / 500 * 100) + '%';
+  document.getElementById('xp-text').textContent = `${currentXP} / 500 XP`;
+}
+
+function checkBadges() {
+  if (completedModules.size >= 1) document.getElementById('badge-first').classList.add('earned');
+  if (quizAnswered.size >= 5) document.getElementById('badge-coder').classList.add('earned');
+  if (quizAnswered.size >= 10) document.getElementById('badge-quiz').classList.add('earned');
+  if (completedModules.size >= 25) document.getElementById('badge-half').classList.add('earned');
+  if (completedModules.size >= 50) document.getElementById('badge-master').classList.add('earned');
+}
+
+function updateProgress() {
+  const pct = Math.max(2, ((currentLesson + 1) / modules.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentLesson + 1} / 50`;
+}
+
+function nextLesson() {
+  if (currentLesson < modules.length - 1) { currentLesson++; selectLesson(currentLesson); }
+  else showToast('🏆 You completed all 50 modules! You\'re a Python master!');
+}
+function prevLesson() {
+  if (currentLesson > 0) { currentLesson--; selectLesson(currentLesson); }
+}
+
+function filterModules(q) {
+  const items = document.querySelectorAll('.module-item');
+  items.forEach((item, i) => {
+    const match = modules[i].title.toLowerCase().includes(q.toLowerCase());
+    item.style.display = match ? '' : 'none';
+  });
+}
+
+function copyCode(btn) {
+  // Copy disabled
+}
+
+// ─── MODE SWITCH ───
+function switchMode(mode) {
+  document.getElementById('ide-mode').style.display = mode === 'ide' ? 'flex' : 'none';
+  document.getElementById('learn-mode').style.display = mode === 'learn' ? 'flex' : 'none';
+  document.getElementById('robot-assistant').style.display = mode === 'ide' ? 'block' : 'none';
+  document.getElementById('tab-ide').classList.toggle('active', mode === 'ide');
+  document.getElementById('tab-learn').classList.toggle('active', mode === 'learn');
+  document.getElementById('run-btn').style.display = mode === 'ide' ? 'flex' : 'none';
+  if (mode === 'learn') {
+    renderModules();
+    renderLesson();
+    updateProgress();
+  }
+}
+
+// ─── TOAST ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+// ─── DISABLE COPY ───
+document.addEventListener('contextmenu', function(e) {
+  if (e.target.closest('.code-block')) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('copy', function(e) {
+  if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.code-block')) {
+    e.preventDefault();
+    return false;
+  }
+  const sel = window.getSelection();
+  if (sel && sel.anchorNode && sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.code-block')) {
+    e.preventDefault();
+    return false;
+  }
+});
+document.addEventListener('keydown', function(e) {
+  const sel = window.getSelection();
+  const inCodeBlock = sel && sel.anchorNode && sel.anchorNode.parentElement && sel.anchorNode.parentElement.closest('.code-block');
+  if (inCodeBlock && (e.ctrlKey || e.metaKey) && e.key === 'c') {
+    e.preventDefault();
+    return false;
+  }
+});
+
+// ─── INIT ───
+renderFiles();
+renderModules();
+renderLesson();
+updateProgress();
+updateLineNumbers();
+
+document.getElementById('new-file-name').addEventListener('keydown', e => { if(e.key === 'Enter') createNewFile(); });
+
+// Close modal on overlay click
+document.getElementById('new-file-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
